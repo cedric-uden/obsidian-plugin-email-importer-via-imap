@@ -47,13 +47,13 @@ const imap = new Imap(config);
 
 class EmailInfo {
     subject: string;
-    date: string;
+    date: Date | null;
     body: string;
     isUnread: boolean | null;
 
     constructor(
         subject: string = '',
-        date: string = '',
+        date: Date | null = null,
         body: string = '',
         isUnread: boolean | null = null
     ) {
@@ -112,7 +112,7 @@ imap.once('ready', function () {
                     if (info.which === 'HEADER.FIELDS (FROM TO SUBJECT DATE)') {
                         let header = Imap.parseHeader(buffer);
                         emailInfo.subject = header.subject ? header.subject[0] : '';
-                        emailInfo.date = header.date ? header.date[0] : '';
+                        emailInfo.date = header.date ? new Date(header.date[0]) : null;
                     } else if (info.which === 'TEXT') {
                         let text = buffer.replace(/\r\n/g, "\n");
                         text = text.replace(/\n+$/g, "");
