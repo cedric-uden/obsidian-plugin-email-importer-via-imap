@@ -94,7 +94,7 @@ imap.once('ready', function () {
         const range = `1:${count}`;
 
         var f = imap.seq.fetch(range, {
-            bodies: 'HEADER.FIELDS (FROM TO SUBJECT DATE)',
+            bodies: ['HEADER.FIELDS (FROM TO SUBJECT DATE)', 'TEXT'],
             struct: true
         });
         f.on('message', function (msg: any) {
@@ -105,9 +105,15 @@ imap.once('ready', function () {
                     buffer += chunk.toString('utf8');
                 });
                 stream.once('end', function () {
-                    let header = Imap.parseHeader(buffer);
-                    emailInfo.subject = header.subject[0];
-                    emailInfo.date = header.date[0];
+                    if (info.which === 'HEADER.FIELDS (FROM TO SUBJECT DATE)') {
+                        let header = Imap.parseHeader(buffer);
+                        emailInfo.subject = header.subject ? header.subject[0] : '';
+                        emailInfo.date = header.date ? header.date[0] : '';
+                    } else if (info.which === 'TEXT') {
+                        let text = buffer.replace(/\r\n/g, "\n");
+                        text = text.replace(/\n+$/g, "");
+                        emailInfo.body = text;
+                    }
                 });
             });
             msg.once('attributes', function (attrs: any) {
