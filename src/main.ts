@@ -63,6 +63,7 @@ class EmailInfo {
         this.isUnread = isUnread;
     }
 }
+
 function printAvailableMailboxes() {
     imap.getBoxes((err, boxes) => {
         if (err) {
@@ -90,8 +91,11 @@ imap.once('ready', function () {
         }
 
         const maxToFetch = 20;
-        const count = Math.min(box.messages.total, maxToFetch);
-        const range = `1:${count}`;
+        const total = box.messages.total;
+        // Calculate the range to fetch the most recent messages,
+        // if the total is 100 and maxToFetch is 20, we want 81:100
+        const start = Math.max(1, total - maxToFetch + 1);
+        const range = `${start}:${total}`;
 
         var f = imap.seq.fetch(range, {
             bodies: ['HEADER.FIELDS (FROM TO SUBJECT DATE)', 'TEXT'],
