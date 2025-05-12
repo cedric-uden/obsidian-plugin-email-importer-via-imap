@@ -45,6 +45,24 @@ if (!config.user || !config.password || !config.host) {
 
 const imap = new Imap(config);
 
+class EmailInfo {
+    subject: string;
+    date: string;
+    body: string;
+    isUnread: boolean | null;
+
+    constructor(
+        subject: string = '',
+        date: string = '',
+        body: string = '',
+        isUnread: boolean | null = null
+    ) {
+        this.subject = subject;
+        this.date = date;
+        this.body = body;
+        this.isUnread = isUnread;
+    }
+}
 function printAvailableMailboxes() {
     imap.getBoxes((err, boxes) => {
         if (err) {
@@ -79,23 +97,24 @@ imap.once('ready', function () {
             bodies: 'HEADER.FIELDS (FROM TO SUBJECT DATE)',
             struct: true
         });
-        f.on('message', function (msg: any, seqno: any) {
-            console.log('Message #%d', seqno);
-            var prefix = '(#' + seqno + ') ';
+        f.on('message', function (msg: any) {
+            let emailInfo = new EmailInfo();
             msg.on('body', function (stream: any, info: any) {
                 var buffer = '';
                 stream.on('data', function (chunk: any) {
                     buffer += chunk.toString('utf8');
                 });
                 stream.once('end', function () {
-                    console.log(prefix + 'Parsed header: %s', inspect(Imap.parseHeader(buffer)));
+                    let header = Imap.parseHeader(buffer);
+                    emailInfo.subject = header.subject[0];
+                    emailInfo.date = header.date[0];
                 });
             });
             msg.once('attributes', function (attrs: any) {
-                console.log(prefix + 'Attributes: %s', inspect(attrs, false, 8));
+                emailInfo.isUnread = !attrs['flags'].includes('\\Seen');
             });
             msg.once('end', function () {
-                console.log(prefix + 'Finished');
+                console.log(inspect(emailInfo, false, 8));
             });
         });
         f.once('error', function (err: string) {
