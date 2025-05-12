@@ -62,7 +62,18 @@ function openInbox(cb: (err: Error | null, box: Imap.Box) => void) {
 imap.once('ready', function () {
     openInbox(function (err: any, box: any) {
         if (err) throw err;
-        var f = imap.seq.fetch('1:3', {
+
+        if (box.messages.total === 0) {
+            console.log('No messages in mailbox');
+            imap.end();
+            return;
+        }
+
+        const maxToFetch = 20;
+        const count = Math.min(box.messages.total, maxToFetch);
+        const range = `1:${count}`;
+
+        var f = imap.seq.fetch(range, {
             bodies: 'HEADER.FIELDS (FROM TO SUBJECT DATE)',
             struct: true
         });
