@@ -16,6 +16,7 @@ let fileConfig = {
     host: "",
     port: "993",
     tls: true,
+    mailbox: "INBOX",
 };
 const configPath = path.join(__dirname, '../config.json');
 if (fs.existsSync(configPath)) {
@@ -32,7 +33,8 @@ const config = {
     password: process.env.IMAP_PASSWORD || fileConfig.password || '',
     host: process.env.IMAP_HOST || fileConfig.host || '',
     port: parseInt(process.env.IMAP_PORT || fileConfig.port || '993'),
-    tls: process.env.IMAP_TLS !== 'false'
+    tls: process.env.IMAP_TLS !== 'false',
+    mailbox: process.env.IMAP_MAILBOX || fileConfig.mailbox || 'INBOX',
 };
 
 // Validate required configuration
@@ -56,7 +58,7 @@ function printAvailableMailboxes() {
 
 function openInbox(cb: (err: Error | null, box: Imap.Box) => void) {
     printAvailableMailboxes();
-    imap.openBox('INBOX', true, cb);
+    imap.openBox(config.mailbox, true, cb);
 }
 
 imap.once('ready', function () {

@@ -3,5 +3,6 @@
   "password": "UpdateMe",
   "host": "UpdateMe",
   "port": 993,
-  "tls": true
+  "tls": true,
+  "mailbox": "Obsidian"
 }
