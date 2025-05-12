@@ -2,36 +2,37 @@
 import * as dotenv from "dotenv";
 import path from "path";
 import fs from "fs";
+import {ImapConfig} from "./models";
 
 dotenv.config();
 
-// Load config from a file if it exists, or use a default empty object
-let fileConfig = {
-    user: "",
-    password: "",
-    host: "",
-    port: "993",
-    tls: true,
-    mailbox: "INBOX",
-};
-const configPath = path.join(__dirname, '../config.json');
-if (fs.existsSync(configPath)) {
+const loadConfigFile = (): Partial<ImapConfig> => {
+    const configPath = path.join(__dirname, '../config.json');
+
+    if (!fs.existsSync(configPath)) {
+        return {};
+    }
+
     try {
-        fileConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        const fileContents = fs.readFileSync(configPath, 'utf8');
+        return JSON.parse(fileContents) as Partial<ImapConfig>;
     } catch (err) {
         console.error('Error loading config file:', err);
+        return {};
     }
-}
-
-// Config object with environment variables taking precedence over file config
-const config = {
-    user: process.env.IMAP_USER || fileConfig.user || '',
-    password: process.env.IMAP_PASSWORD || fileConfig.password || '',
-    host: process.env.IMAP_HOST || fileConfig.host || '',
-    port: parseInt(process.env.IMAP_PORT || fileConfig.port || '993'),
-    tls: process.env.IMAP_TLS !== 'false',
-    mailbox: process.env.IMAP_MAILBOX || fileConfig.mailbox || 'INBOX',
 };
+
+
+const fileConfig = loadConfigFile();
+
+const config = new ImapConfig(
+    process.env.IMAP_USER || fileConfig.user || '',
+    process.env.IMAP_PASSWORD || fileConfig.password || '',
+    process.env.IMAP_HOST || fileConfig.host || '',
+    process.env.IMAP_PORT || fileConfig.port || '993',
+    process.env.IMAP_TLS !== 'false',
+    process.env.IMAP_MAILBOX || fileConfig.mailbox || 'INBOX',
+)
 
 // Validate required configuration
 if (!config.user || !config.password || !config.host) {

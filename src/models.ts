@@ -20,4 +20,29 @@ class EmailInfo {
     }
 }
 
-export { EmailInfo };
+class ImapConfig {
+    user: string;
+    password: string;
+    host: string;
+    port: string;
+    tls: boolean;
+    mailbox: string;
+
+    constructor(
+        user: string = '',
+        password: string = '',
+        host: string = '',
+        port: string = '993',
+        tls: boolean = true,
+        mailbox: string = 'INBOX',
+    ) {
+        this.user = user;
+        this.password = password;
+        this.host = host;
+        this.port = port;
+        this.tls = tls;
+        this.mailbox = mailbox;
+    }
+}
+
+export { EmailInfo, ImapConfig };
