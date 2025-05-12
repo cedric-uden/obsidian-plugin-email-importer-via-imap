@@ -43,7 +43,19 @@ if (!config.user || !config.password || !config.host) {
 
 const imap = new Imap(config);
 
+function printAvailableMailboxes() {
+    imap.getBoxes((err, boxes) => {
+        if (err) {
+            console.error('Error getting mailboxes:', err);
+            return;
+        }
+        let mailboxNames = Object.keys(boxes);
+        console.log('Available mailboxes: ' + mailboxNames.join(", "));
+    });
+}
+
 function openInbox(cb: (err: Error | null, box: Imap.Box) => void) {
+    printAvailableMailboxes();
     imap.openBox('INBOX', true, cb);
 }
 
