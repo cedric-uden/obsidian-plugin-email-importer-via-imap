@@ -1,12 +1,12 @@
 import Imap from "imap";
-import {EmailInfo} from "./models";
+import {EmailInfo, ImapConfig} from "./models";
 import {inspect} from "util";
 
 class ImapClient {
     private imap: Imap;
-    config: any;
+    private readonly config: ImapConfig;
 
-    constructor(config: any) {
+    constructor(config: ImapConfig) {
         this.config = config;
         this.imap = new Imap(this.config);
         this.onError();
@@ -39,15 +39,14 @@ class ImapClient {
 
                 let messageUids: number[] = [];
 
-                var f = this.imap.seq.fetch(range, {
+                const f = this.imap.seq.fetch(range, {
                     bodies: ['HEADER.FIELDS (FROM TO SUBJECT DATE)', 'TEXT'],
                     struct: true
                 });
                 f.on('message', function (msg: any) {
                     let emailInfo = new EmailInfo();
-                    let uid: number;
                     msg.on('body', function (stream: any, info: any) {
-                        var buffer = '';
+                        let buffer = '';
                         stream.on('data', function (chunk: any) {
                             buffer += chunk.toString('utf8');
                         });

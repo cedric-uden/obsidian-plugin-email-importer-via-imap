@@ -24,7 +24,7 @@ class ImapConfig {
     user: string;
     password: string;
     host: string;
-    port: string;
+    port: number;
     tls: boolean;
     mailbox: string;
 
@@ -39,7 +39,7 @@ class ImapConfig {
         this.user = user;
         this.password = password;
         this.host = host;
-        this.port = port;
+        this.port = parseInt(port);
         this.tls = tls;
         this.mailbox = mailbox;
     }
