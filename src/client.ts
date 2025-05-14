@@ -28,7 +28,7 @@ class ImapClient {
 
                     if (box.messages.total === 0) {
                         console.log('No messages in mailbox');
-                        this.imap.end();
+                        this.terminate();
                         resolve([]);
                         return;
                     }
@@ -54,7 +54,6 @@ class ImapClient {
                     f.once('end', () => {
                         console.log('Done fetching all messages!');
                         resolve(emailInfos);
-                        this.terminate();
                     });
                 }).then();
             });
@@ -117,10 +116,9 @@ class ImapClient {
         if (messageUids.length > 0) {
             this.markAsRead(messageUids);
         }
-        this.terminate();
     }
 
-    private terminate() {
+    terminate() {
         this.imap.end();
     }
 
