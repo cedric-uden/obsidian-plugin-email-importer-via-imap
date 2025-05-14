@@ -13,6 +13,7 @@ client.fetch().then(
     }
 );
 
+client.markAsRead([1]).then();
 
 client.getAvailableMailboxes().then(
     (mailboxes) => {

@@ -41,7 +41,7 @@ class ImapClient {
                     });
 
                     f.on('message', (msg: any) => {
-                        this.getMessages(msg, []).then(emailInfo => {
+                        this.getMessages(msg).then(emailInfo => {
                             emailInfos.push(emailInfo);
                         });
                     });
@@ -67,24 +67,12 @@ class ImapClient {
         return `${start}:${totalMessages}`;
     }
 
-    private fetchMessages(range: string) {
-        const messageUids: number[] = [];
-        const f = this.imap.seq.fetch(range, {
-            bodies: ['HEADER.FIELDS (FROM TO SUBJECT DATE)', 'TEXT'],
-            struct: true
-        });
-
-        f.on('message', (msg: any) => this.getMessages(msg, messageUids));
-        f.once('error', (err: string) => console.log('Fetch error: ' + err));
-        f.once('end', () => this.onFetchEnd(messageUids));
-    }
-
-    private getMessages(msg: any, messageUids: number[]): Promise<EmailInfo> {
+    private getMessages(msg: any): Promise<EmailInfo> {
         return new Promise((resolve) => {
             const emailInfo = new EmailInfo();
 
             msg.on('body', (stream: any, info: any) => this.processMessageBody(stream, info, emailInfo));
-            msg.once('attributes', (attrs: any) => this.processMessageAttributes(attrs, emailInfo, messageUids));
+            msg.once('attributes', (attrs: any) => this.processMessageAttributes(attrs, emailInfo));
             msg.once('end', () => resolve(emailInfo));
         });
     }
@@ -103,19 +91,9 @@ class ImapClient {
         });
     }
 
-    private processMessageAttributes(attrs: any, emailInfo: EmailInfo, messageUids: number[]) {
+    private processMessageAttributes(attrs: any, emailInfo: EmailInfo) {
         emailInfo.isUnread = !attrs['flags'].includes('\\Seen');
         emailInfo.uid = attrs['uid'];
-        if (emailInfo.isUnread) {
-            messageUids.push(emailInfo.uid);
-        }
-    }
-
-    private onFetchEnd(messageUids: number[]) {
-        console.log('Done fetching all messages!');
-        if (messageUids.length > 0) {
-            this.markAsRead(messageUids);
-        }
     }
 
     terminate() {
@@ -154,13 +132,17 @@ class ImapClient {
         this.imap.openBox(this.config.mailbox, false, cb);
     }
 
-    private markAsRead(uid: number | number[]) {
-        this.imap.setFlags(uid, ['\\Seen'], (err) => {
-            if (err) {
-                console.error('Error marking message as read:', err);
-            } else {
-                console.log(`Message(s) ${uid} marked as read`);
-            }
+    async markAsRead(uid: number | number[]) {
+        this.imap.once('ready', () => {
+            this.openInbox((err: any, box: any) => {
+                this.imap.setFlags(uid, ['\\Seen'], (err) => {
+                    if (err) {
+                        console.error('Error marking message as read:', err);
+                    } else {
+                        console.log(`Message(s) ${uid} marked as read`);
+                    }
+                });
+            });
         });
     }
 }
