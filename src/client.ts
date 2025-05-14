@@ -47,17 +47,24 @@ class ImapClient {
             struct: true
         });
 
-        f.on('message', (msg: any) => this.processMessage(msg, messageUids));
+        f.on('message', (msg: any) => this.getMessages(msg, messageUids, true));
         f.once('error', (err: string) => console.log('Fetch error: ' + err));
         f.once('end', () => this.onFetchEnd(messageUids));
     }
 
-    private processMessage(msg: any, messageUids: number[]) {
-        const emailInfo = new EmailInfo();
+    getMessages(msg: any, messageUids: number[], print: boolean = false): Promise<EmailInfo> {
+        return new Promise((resolve) => {
+            const emailInfo = new EmailInfo();
 
-        msg.on('body', (stream: any, info: any) => this.processMessageBody(stream, info, emailInfo));
-        msg.once('attributes', (attrs: any) => this.processMessageAttributes(attrs, emailInfo, messageUids));
-        msg.once('end', () => console.log(inspect(emailInfo, false, 8)));
+            msg.on('body', (stream: any, info: any) => this.processMessageBody(stream, info, emailInfo));
+            msg.once('attributes', (attrs: any) => this.processMessageAttributes(attrs, emailInfo, messageUids));
+            msg.once('end', () => {
+                if (print) {
+                    console.log("Finished email: " + inspect(emailInfo, false, 2, true));
+                }
+                resolve(emailInfo);
+            });
+        });
     }
 
     private processMessageBody(stream: any, info: any, emailInfo: EmailInfo) {
