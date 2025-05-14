@@ -19,7 +19,6 @@ class ImapClient {
     }
 
     fetch() {
-
         this.imap.once('ready', () => {
             this.openInbox((err: any, box: any) => {
                 if (err) throw err;
@@ -30,64 +29,65 @@ class ImapClient {
                     return;
                 }
 
-                const maxToFetch = 20;
-                const total = box.messages.total;
-                // Calculate the range to fetch the most recent messages,
-                // if the total is 100 and maxToFetch is 20, we want 81:100
-                const start = Math.max(1, total - maxToFetch + 1);
-                const range = `${start}:${total}`;
-
-                let messageUids: number[] = [];
-
-                const f = this.imap.seq.fetch(range, {
-                    bodies: ['HEADER.FIELDS (FROM TO SUBJECT DATE)', 'TEXT'],
-                    struct: true
-                });
-                f.on('message', function (msg: any) {
-                    let emailInfo = new EmailInfo();
-                    msg.on('body', function (stream: any, info: any) {
-                        let buffer = '';
-                        stream.on('data', function (chunk: any) {
-                            buffer += chunk.toString('utf8');
-                        });
-                        stream.once('end', function () {
-                            if (info.which === 'HEADER.FIELDS (FROM TO SUBJECT DATE)') {
-                                let header = Imap.parseHeader(buffer);
-                                emailInfo.subject = header.subject ? header.subject[0] : '';
-                                emailInfo.date = header.date ? new Date(header.date[0]) : null;
-                            } else if (info.which === 'TEXT') {
-                                let text = buffer.replace(/\r\n/g, "\n");
-                                text = text.replace(/\n+$/g, "");
-                                emailInfo.body = text;
-                            }
-                        });
-                    });
-                    msg.once('attributes', function (attrs: any) {
-                        emailInfo.isUnread = !attrs['flags'].includes('\\Seen');
-                        emailInfo.uid = attrs['uid'];
-                        if (emailInfo.isUnread) {
-                            messageUids.push(emailInfo.uid);
-                        }
-                    });
-                    msg.once('end', function () {
-                        console.log(inspect(emailInfo, false, 8));
-                    });
-                });
-                f.once('error', function (err: string) {
-                    console.log('Fetch error: ' + err);
-                });
-                f.once('end', () => {
-                    console.log('Done fetching all messages!');
-
-                    if (messageUids.length > 0) {
-                        this.markAsRead(messageUids);
-                    }
-
-                    this.terminate();
-                });
-            }).then(() => {
-            });
+                const range = this.calculateFetchRange(box.messages.total, 20);
+                this.fetchMessages(range);
+            }).then();
         });
+    }
+
+    private calculateFetchRange(totalMessages: number, maxToFetch: number): string {
+        const start = Math.max(1, totalMessages - maxToFetch + 1);
+        return `${start}:${totalMessages}`;
+    }
+
+    private fetchMessages(range: string) {
+        const messageUids: number[] = [];
+        const f = this.imap.seq.fetch(range, {
+            bodies: ['HEADER.FIELDS (FROM TO SUBJECT DATE)', 'TEXT'],
+            struct: true
+        });
+
+        f.on('message', (msg: any) => this.processMessage(msg, messageUids));
+        f.once('error', (err: string) => console.log('Fetch error: ' + err));
+        f.once('end', () => this.onFetchEnd(messageUids));
+    }
+
+    private processMessage(msg: any, messageUids: number[]) {
+        const emailInfo = new EmailInfo();
+
+        msg.on('body', (stream: any, info: any) => this.processMessageBody(stream, info, emailInfo));
+        msg.once('attributes', (attrs: any) => this.processMessageAttributes(attrs, emailInfo, messageUids));
+        msg.once('end', () => console.log(inspect(emailInfo, false, 8)));
+    }
+
+    private processMessageBody(stream: any, info: any, emailInfo: EmailInfo) {
+        let buffer = '';
+        stream.on('data', (chunk: any) => buffer += chunk.toString('utf8'));
+        stream.once('end', () => {
+            if (info.which === 'HEADER.FIELDS (FROM TO SUBJECT DATE)') {
+                const header = Imap.parseHeader(buffer);
+                emailInfo.subject = header.subject ? header.subject[0] : '';
+                emailInfo.date = header.date ? new Date(header.date[0]) : null;
+            } else if (info.which === 'TEXT') {
+                emailInfo.body = buffer.replace(/\r\n/g, "\n").replace(/\n+$/g, "");
+            }
+        });
+    }
+
+    private processMessageAttributes(attrs: any, emailInfo: EmailInfo, messageUids: number[]) {
+        emailInfo.isUnread = !attrs['flags'].includes('\\Seen');
+        emailInfo.uid = attrs['uid'];
+        if (emailInfo.isUnread) {
+            messageUids.push(emailInfo.uid);
+        }
+    }
+
+    private onFetchEnd(messageUids: number[]) {
+        console.log('Done fetching all messages!');
+        if (messageUids.length > 0) {
+            this.markAsRead(messageUids);
+        }
+        this.terminate();
     }
 
     private terminate() {
