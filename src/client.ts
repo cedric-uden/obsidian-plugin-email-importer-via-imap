@@ -136,24 +136,21 @@ class ImapClient {
 
     async getAvailableMailboxes(): Promise<string[]> {
         return new Promise((resolve, reject) => {
-            this.imap.getBoxes((err, boxes) => {
-                if (err) {
-                    console.error('Error getting mailboxes:', err);
-                    reject(err);
-                    return;
-                }
-                resolve(Object.keys(boxes));
+            this.imap.once('ready', () => {
+                this.imap.getBoxes((err, boxes) => {
+                    if (err) {
+                        console.error('Error getting mailboxes:', err);
+                        reject(err);
+                        return;
+                    }
+                    resolve(Object.keys(boxes));
+                });
             });
         });
     }
 
-    private async printAvailableMailboxes() {
-        const mailboxes = await this.getAvailableMailboxes();
-        console.log('Available mailboxes: ' + mailboxes.join(", "));
-    }
 
     private async openInbox(cb: (err: Error | null, box: Imap.Box) => void) {
-        await this.printAvailableMailboxes();
         this.imap.openBox(this.config.mailbox, false, cb);
     }
 
