@@ -1,6 +1,5 @@
 import Imap from "imap";
 import {EmailInfo, ImapConfig} from "./models";
-import {inspect} from "util";
 
 class ImapClient {
     private imap: Imap;
@@ -18,20 +17,49 @@ class ImapClient {
         this.imap.connect();
     }
 
-    fetch() {
-        this.imap.once('ready', () => {
-            this.openInbox((err: any, box: any) => {
-                if (err) throw err;
+    fetch(): Promise<EmailInfo[]> {
+        return new Promise((resolve, reject) => {
+            this.imap.once('ready', () => {
+                this.openInbox((err: any, box: any) => {
+                    if (err) {
+                        reject(err);
+                        return;
+                    }
 
-                if (box.messages.total === 0) {
-                    console.log('No messages in mailbox');
-                    this.imap.end();
-                    return;
-                }
+                    if (box.messages.total === 0) {
+                        console.log('No messages in mailbox');
+                        this.imap.end();
+                        resolve([]);
+                        return;
+                    }
 
-                const range = this.calculateFetchRange(box.messages.total, 20);
-                this.fetchMessages(range);
-            }).then();
+                    const range = this.calculateFetchRange(box.messages.total, 20);
+                    const emailInfos: EmailInfo[] = [];
+                    const f = this.imap.seq.fetch(range, {
+                        bodies: ['HEADER.FIELDS (FROM TO SUBJECT DATE)', 'TEXT'],
+                        struct: true
+                    });
+
+                    f.on('message', (msg: any) => {
+                        this.getMessages(msg, []).then(emailInfo => {
+                            emailInfos.push(emailInfo);
+                        });
+                    });
+
+                    f.once('error', (err: string) => {
+                        console.log('Fetch error: ' + err);
+                        reject(err);
+                    });
+
+                    f.once('end', () => {
+                        console.log('Done fetching all messages!');
+                        resolve(emailInfos);
+                        this.terminate();
+                    });
+                }).then();
+            });
+
+            this.imap.once('error', (err: any) => reject(err));
         });
     }
 
@@ -47,23 +75,18 @@ class ImapClient {
             struct: true
         });
 
-        f.on('message', (msg: any) => this.getMessages(msg, messageUids, true));
+        f.on('message', (msg: any) => this.getMessages(msg, messageUids));
         f.once('error', (err: string) => console.log('Fetch error: ' + err));
         f.once('end', () => this.onFetchEnd(messageUids));
     }
 
-    getMessages(msg: any, messageUids: number[], print: boolean = false): Promise<EmailInfo> {
+    private getMessages(msg: any, messageUids: number[]): Promise<EmailInfo> {
         return new Promise((resolve) => {
             const emailInfo = new EmailInfo();
 
             msg.on('body', (stream: any, info: any) => this.processMessageBody(stream, info, emailInfo));
             msg.once('attributes', (attrs: any) => this.processMessageAttributes(attrs, emailInfo, messageUids));
-            msg.once('end', () => {
-                if (print) {
-                    console.log("Finished email: " + inspect(emailInfo, false, 2, true));
-                }
-                resolve(emailInfo);
-            });
+            msg.once('end', () => resolve(emailInfo));
         });
     }
 
