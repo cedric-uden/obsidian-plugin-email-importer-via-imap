@@ -48,13 +48,12 @@ class ImapClient {
 
     private onError() {
         this.imap.once('error', function (err: any) {
-            console.log(err);
+            console.error(err);
         });
     }
 
     private onEnd() {
         this.imap.once('end', function () {
-            console.log('Connection ended');
         });
     }
 
@@ -109,7 +108,6 @@ class ImapClient {
                     }
 
                     if (box.messages.total === 0) {
-                        console.log('No messages in mailbox');
                         this.terminate();
                         resolve([]);
                         return;
@@ -129,12 +127,11 @@ class ImapClient {
                     });
 
                     f.once('error', (err: string) => {
-                        console.log('Fetch error: ' + err);
+                        console.error('Fetch error: ' + err);
                         reject(err);
                     });
 
                     f.once('end', () => {
-                        console.log('Done fetching all messages!');
                         resolve(emailInfos);
                     });
                 }).then();
