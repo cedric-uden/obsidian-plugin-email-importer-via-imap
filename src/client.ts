@@ -1,13 +1,13 @@
-import Imap from "imap";
+import Connection, {Box} from "./imap/lib/Connection";
 import {EmailInfo, ImapConfig} from "./models";
 
 class ImapClient {
-    private imap: Imap;
+    private imap: Connection;
     private readonly config: ImapConfig;
 
     constructor(config: ImapConfig) {
         this.config = config;
-        this.imap = new Imap(this.config);
+        this.imap = new Connection(this.config);
         this.onError();
         this.onEnd();
     }
@@ -32,7 +32,7 @@ class ImapClient {
         stream.on('data', (chunk: any) => buffer += chunk.toString('utf8'));
         stream.once('end', () => {
             if (info.which === 'HEADER.FIELDS (FROM TO SUBJECT DATE)') {
-                const header = Imap.parseHeader(buffer);
+                const header = Connection.parseHeader(buffer);
                 emailInfo.subject = header.subject ? header.subject[0] : '';
                 emailInfo.date = header.date ? new Date(header.date[0]) : null;
             } else if (info.which === 'TEXT') {
@@ -58,7 +58,7 @@ class ImapClient {
         });
     }
 
-    private async openInbox(cb: (err: Error | null, box: Imap.Box) => void) {
+    private async openInbox(cb: (err: Error | null, box?: Box) => void) {
         this.imap.openBox(this.config.mailbox, false, cb);
     }
 
@@ -72,7 +72,7 @@ class ImapClient {
 
     async markAsRead(uid: number | number[]) {
         this.imap.once('ready', () => {
-            this.openInbox((err: any, box: any) => {
+            this.openInbox(() => {
                 this.imap.setFlags(uid, ['\\Seen'], (err) => {
                     if (err) {
                         console.error('Error marking message as read:', err);
@@ -93,7 +93,7 @@ class ImapClient {
                         reject(err);
                         return;
                     }
-                    resolve(Object.keys(boxes));
+                    resolve(Object.keys(boxes || {}));
                 });
             });
         });
