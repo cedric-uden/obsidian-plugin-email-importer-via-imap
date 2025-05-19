@@ -6,11 +6,19 @@ import {ImapConfig} from "./models";
 // Remember to rename these classes and interfaces!
 
 interface MyPluginSettings {
-    mySetting: string;
+    username: string;
+    password: string;
+    host: string;
+    port: string;
+    mailbox: string;
 }
 
 const DEFAULT_SETTINGS: MyPluginSettings = {
-    mySetting: 'default'
+    username: 'username',
+    password: 'password',
+    host: 'imap.example.com',
+    port: '993',
+    mailbox: 'INBOX'
 }
 
 export default class MyPlugin extends Plugin {
@@ -36,7 +44,7 @@ export default class MyPlugin extends Plugin {
             id: 'email-to-obsidian-note',
             name: 'Fetch email to Obsidian note',
             callback: () => {
-                new UseImapClient().do();
+                new UseImapClient(this.settings).do();
             }
         });
 
@@ -70,8 +78,8 @@ export default class MyPlugin extends Plugin {
 class UseImapClient {
     private client: ImapClient;
 
-    constructor() {
-        const config = new ImapConfig('you', 'you', 'imap.example.com', "993", true, 'Obsidian');
+    constructor(settings: MyPluginSettings) {
+        const config = new ImapConfig(settings.username, settings.password, settings.host, settings.port, true, settings.mailbox);
         this.client = new ImapClient(config);
     }
 
@@ -115,13 +123,54 @@ class SampleSettingTab extends PluginSettingTab {
         containerEl.empty();
 
         new Setting(containerEl)
-            .setName('Setting #1')
-            .setDesc('It\'s a secret')
+            .setName('IMAP Username')
             .addText(text => text
-                .setPlaceholder('Enter your secret')
-                .setValue(this.plugin.settings.mySetting)
+                .setPlaceholder('Enter username')
+                .setValue(this.plugin.settings.username)
                 .onChange(async (value) => {
-                    this.plugin.settings.mySetting = value;
+                    this.plugin.settings.username = value;
+                    await this.plugin.saveSettings();
+                }));
+
+        new Setting(containerEl)
+            .setName('IMAP Password')
+            .addText(text => text
+                .setPlaceholder('Enter password')
+                .setValue(this.plugin.settings.password)
+                .onChange(async (value) => {
+                    this.plugin.settings.password = value;
+                    await this.plugin.saveSettings();
+                }));
+
+
+        new Setting(containerEl)
+            .setName('IMAP Hostname')
+            .addText(text => text
+                .setPlaceholder('Enter hostname')
+                .setValue(this.plugin.settings.host)
+                .onChange(async (value) => {
+                    this.plugin.settings.host = value;
+                    await this.plugin.saveSettings();
+                }));
+
+        new Setting(containerEl)
+            .setName('IMAP Port')
+            .addText(text => text
+                .setPlaceholder('Enter port')
+                .setValue(this.plugin.settings.port)
+                .onChange(async (value) => {
+                    this.plugin.settings.port = value;
+                    await this.plugin.saveSettings();
+                }));
+
+
+        new Setting(containerEl)
+            .setName('IMAP Mailbox')
+            .addText(text => text
+                .setPlaceholder('Enter mailbox')
+                .setValue(this.plugin.settings.mailbox)
+                .onChange(async (value) => {
+                    this.plugin.settings.mailbox = value;
                     await this.plugin.saveSettings();
                 }));
     }
