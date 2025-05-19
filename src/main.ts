@@ -11,6 +11,7 @@ interface MyPluginSettings {
 	host: string;
 	port: string;
 	mailbox: string;
+	n_last_messages: string;
 }
 
 const DEFAULT_SETTINGS: MyPluginSettings = {
@@ -18,7 +19,8 @@ const DEFAULT_SETTINGS: MyPluginSettings = {
 	password: 'password',
 	host: 'imap.example.com',
 	port: '993',
-	mailbox: 'INBOX'
+	mailbox: 'INBOX',
+	n_last_messages: '5',
 }
 
 export default class MyPlugin extends Plugin {
@@ -72,8 +74,9 @@ class UseImapClient {
 		return mailboxes;
 	}
 
-	async do(n: number = 3) {
+	async do() {
 		await this.client.connect();
+		const n = parseInt(this.plugin.settings.n_last_messages)
 		const emailInfos = await this.client.fetch(n, true);
 		const unreadEmails = emailInfos.filter(email => email.isUnread);
 
@@ -224,5 +227,15 @@ class SampleSettingTab extends PluginSettingTab {
 				});
 		});
 
+		new Setting(containerEl)
+			.setName('N Last Messages')
+			.setDesc("Determine how many emails to load to find unread emails.")
+			.addText(text => text
+				.setPlaceholder('N Last Messages')
+				.setValue(this.plugin.settings.n_last_messages)
+				.onChange(async (value) => {
+					this.plugin.settings.n_last_messages = value;
+					await this.plugin.saveSettings();
+				}));
 	}
 }
