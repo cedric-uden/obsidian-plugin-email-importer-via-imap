@@ -67,14 +67,14 @@ class UseImapClient {
     }
 
     async getMailboxNames() {
-        this.client.connect();
+        await this.client.connect();
         const mailboxes = await this.client.getAvailableMailboxes()
         this.client.terminate();
         return mailboxes;
     }
 
     async do(n: number = 3) {
-        this.client.connect();
+        await this.client.connect();
         const emailInfos = await this.client.fetch(n);
         console.log(emailInfos);
         await this.client.markAsRead([1]);
