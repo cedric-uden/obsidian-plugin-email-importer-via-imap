@@ -73,20 +73,12 @@ class UseImapClient {
         return mailboxes;
     }
 
-    do(n: number = 3) {
+    async do(n: number = 3) {
         this.client.connect();
-        this.client.fetch(n).then(
-            (emailInfos) => {
-                console.log('Fetched emails:', emailInfos);
-            }
-        ).catch((err) => {
-                console.error('Error fetching emails:', err);
-            }
-        );
-
-        this.client.markAsRead([1]).then(() => {
-            this.client.terminate();
-        });
+        const emailInfos = await this.client.fetch(n);
+        console.log(emailInfos);
+        await this.client.markAsRead([1]);
+        this.client.terminate();
     }
 }
 
