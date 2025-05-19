@@ -72,7 +72,7 @@ class ImapClient {
 
     async markAsRead(uid: number | number[]) {
         this.imap.once('ready', () => {
-            this.openInbox((err: any, box: any) => {
+            this.openInbox(() => {
                 this.imap.setFlags(uid, ['\\Seen'], (err) => {
                     if (err) {
                         console.error('Error marking message as read:', err);
@@ -93,7 +93,7 @@ class ImapClient {
                         reject(err);
                         return;
                     }
-                    resolve(Object.keys(boxes));
+                    resolve(Object.keys(boxes || {}));
                 });
             });
         });
