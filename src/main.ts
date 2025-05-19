@@ -1,6 +1,7 @@
 import ImapClient from "./client";
-import {App, Plugin, PluginSettingTab, Setting, moment, Notice} from 'obsidian';
+import {App, Plugin, PluginSettingTab, Setting, moment, Notice, DropdownComponent} from 'obsidian';
 import {ImapConfig} from "./models";
+import {FolderSuggestions} from "./folderSuggestions";
 
 
 // Remember to rename these classes and interfaces!
@@ -11,7 +12,8 @@ interface MyPluginSettings {
 	host: string;
 	port: string;
 	mailbox: string;
-	n_last_messages: string;
+	nLastMessages: string;
+	savePath: string;
 }
 
 const DEFAULT_SETTINGS: MyPluginSettings = {
@@ -20,7 +22,8 @@ const DEFAULT_SETTINGS: MyPluginSettings = {
 	host: 'imap.example.com',
 	port: '993',
 	mailbox: 'INBOX',
-	n_last_messages: '5',
+	nLastMessages: '5',
+	savePath: '/',
 }
 
 export default class MyPlugin extends Plugin {
@@ -76,7 +79,7 @@ class UseImapClient {
 
 	async do() {
 		await this.client.connect();
-		const n = parseInt(this.plugin.settings.n_last_messages)
+		const n = parseInt(this.plugin.settings.nLastMessages)
 		const emailInfos = await this.client.fetch(n, true);
 		const unreadEmails = emailInfos.filter(email => email.isUnread);
 
@@ -84,10 +87,15 @@ class UseImapClient {
 			const formattedDate = moment(email.date).format('YYYYMMDD.HHmmss');
 			const noteContent = email.body;
 			const noteName = `${formattedDate}-EmailToNote`;
+
+			// Construct the full file path using the configured save path
+			const savePath = this.plugin.settings.savePath === '/'
+				? `${noteName}.md`
+				: `${this.plugin.settings.savePath}/${noteName}.md`;
 			try {
-				await this.plugin.app.vault.create(`${noteName}.md`, noteContent);
+				await this.plugin.app.vault.create(savePath, noteContent);
 			} catch (error) {
-				console.error(`Failed to create file for email: ${noteName}`, error);
+				console.error(`Failed to create file for email: ${savePath}`, error);
 			}
 		}
 
@@ -103,6 +111,7 @@ class UseImapClient {
 class SampleSettingTab extends PluginSettingTab {
 	plugin: MyPlugin;
 	mailboxDropdown: HTMLSelectElement;
+	folderInput: HTMLInputElement;
 
 	constructor(app: App, plugin: MyPlugin) {
 		super(app, plugin);
@@ -232,10 +241,38 @@ class SampleSettingTab extends PluginSettingTab {
 			.setDesc("Determine how many emails to load to find unread emails.")
 			.addText(text => text
 				.setPlaceholder('N Last Messages')
-				.setValue(this.plugin.settings.n_last_messages)
+				.setValue(this.plugin.settings.nLastMessages)
 				.onChange(async (value) => {
-					this.plugin.settings.n_last_messages = value;
+					this.plugin.settings.nLastMessages = value;
 					await this.plugin.saveSettings();
 				}));
+
+		const folderSetting = new Setting(containerEl)
+			.setName('Email Notes Location')
+			.setDesc('Choose where to save email notes')
+			.addText(text => {
+				this.folderInput = text.inputEl;
+				text.setValue(this.plugin.settings.savePath)
+					.onChange(async (value) => {
+						this.plugin.settings.savePath = value;
+						await this.plugin.saveSettings();
+					});
+
+				// Add the suggestion functionality
+				new FolderSuggestions(this.app, this.plugin).setupFolderSuggestions(this.folderInput);
+
+				return text;
+			});
+
+		folderSetting.addButton(button => {
+			button
+				.setIcon('folder')
+				.setTooltip('Browse folders')
+				.onClick(() => {
+					// Trigger the suggestions popup
+					const event = new MouseEvent('click');
+					this.folderInput.dispatchEvent(event);
+				});
+		});
 	}
 }

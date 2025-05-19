@@ -1,8 +1,12 @@
-/*
+.folder-suggestion-container {
+	font-size: var(--font-ui-small);
+}
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
+.suggestion-item:hover {
+	background-color: var(--interactive-hover);
+}
 
-If your plugin does not need CSS, delete this file.
-
-*/
+.suggestion-item.is-selected {
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
