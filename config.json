@@ -1,8 +1,0 @@
-{
-  "user": "my@email.com",
-  "password": "UpdateMe",
-  "host": "UpdateMe",
-  "port": 993,
-  "tls": true,
-  "mailbox": "Obsidian"
-}
