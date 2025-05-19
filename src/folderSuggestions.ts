@@ -20,26 +20,7 @@ export class FolderSuggestions {
 		return folders;
 	}
 
-	private async loadFolders(dropdown: any): Promise<void> {
-		dropdown.selectEl.innerHTML = '';
-
-		const folders = this.getFolders();
-
-		folders.forEach(folder => {
-			dropdown.addOption(folder, folder);
-		});
-
-		if (folders.includes(this.plugin.settings.savePath)) {
-			dropdown.setValue(this.plugin.settings.savePath);
-		} else {
-			dropdown.setValue('/');
-		}
-	}
-
 	setupFolderSuggestions(inputEl: HTMLInputElement): void {
-		// Store reference to this for use in callbacks
-		const self = this;
-
 		inputEl.addEventListener('click', async () => {
 			// Get all folders
 			const folders = this.getFolders();
@@ -83,7 +64,6 @@ export class FolderSuggestions {
 				left: rect.left + 'px'
 			});
 
-			// Append to settings panel if we're in it, otherwise to body
 			const settingsPanel = inputEl.closest('.vertical-tab-content');
 			const parent = settingsPanel || document.body;
 			parent.appendChild(container);
@@ -161,8 +141,6 @@ export class FolderSuggestions {
 					items[index].classList.add('is-selected');
 					items[index].style.backgroundColor = 'var(--interactive-accent)';
 					items[index].style.color = 'var(--text-on-accent)';
-
-					// Ensure the selected item is visible
 					items[index].scrollIntoView({ block: 'nearest' });
 				}
 			}
@@ -197,7 +175,7 @@ export class FolderSuggestions {
 		function addSuggestionItem(path: string, resultsList: HTMLElement, onSelect: (path: string) => void, query: string) {
 			const item = document.createElement('div');
 			item.addClass('suggestion-item');
-			item.setAttribute('data-path', path); // Store path as data attribute
+			item.setAttribute('data-path', path);
 
 			Object.assign(item.style, {
 				padding: '6px 8px',
