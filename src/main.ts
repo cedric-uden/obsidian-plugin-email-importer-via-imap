@@ -4,7 +4,7 @@ import ImapClient from "./client";
 
 const client = new ImapClient(config);
 client.connect();
-client.fetch().then(
+client.fetch(3).then(
     (emailInfos) => {
         console.log('Fetched emails:', emailInfos);
     }

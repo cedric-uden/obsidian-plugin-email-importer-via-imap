@@ -99,7 +99,7 @@ class ImapClient {
         });
     }
 
-    fetch(): Promise<EmailInfo[]> {
+    fetch(nRecentMails = 5): Promise<EmailInfo[]> {
         return new Promise((resolve, reject) => {
             this.imap.once('ready', () => {
                 this.openInbox((err: any, box: any) => {
@@ -115,7 +115,7 @@ class ImapClient {
                         return;
                     }
 
-                    const range = this.calculateFetchRange(box.messages.total, 20);
+                    const range = this.calculateFetchRange(box.messages.total, nRecentMails);
                     const emailInfos: EmailInfo[] = [];
                     const f = this.imap.seq.fetch(range, {
                         bodies: ['HEADER.FIELDS (FROM TO SUBJECT DATE)', 'TEXT'],
