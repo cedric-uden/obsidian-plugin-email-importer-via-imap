@@ -23,15 +23,17 @@ const DEFAULT_SETTINGS: MyPluginSettings = {
 
 export default class MyPlugin extends Plugin {
     settings: MyPluginSettings;
+    client: UseImapClient;
 
     async onload() {
         await this.loadSettings();
+        this.client = new UseImapClient(this.settings);
 
         this.addCommand({
             id: 'email-to-obsidian-note',
             name: 'Fetch email to Obsidian note',
             callback: () => {
-                new UseImapClient(this.settings).do();
+                this.client.do();
             }
         });
 
