@@ -92,6 +92,7 @@ class UseImapClient {
 
 class SampleSettingTab extends PluginSettingTab {
     plugin: MyPlugin;
+    mailboxDropdown: HTMLSelectElement;
 
     constructor(app: App, plugin: MyPlugin) {
         super(app, plugin);
@@ -144,15 +145,77 @@ class SampleSettingTab extends PluginSettingTab {
                     await this.plugin.saveSettings();
                 }));
 
-
-        new Setting(containerEl)
+        const mailboxSetting = new Setting(containerEl)
             .setName('IMAP Mailbox')
-            .addText(text => text
-                .setPlaceholder('Enter mailbox')
-                .setValue(this.plugin.settings.mailbox)
-                .onChange(async (value) => {
+            .setDesc('Select a mailbox or press refresh to load available mailboxes')
+            .addDropdown(dropdown => {
+                this.mailboxDropdown = dropdown.selectEl;
+                // Only add the current mailbox initially
+                dropdown.addOption(this.plugin.settings.mailbox, this.plugin.settings.mailbox);
+                dropdown.setValue(this.plugin.settings.mailbox);
+                dropdown.onChange(async (value) => {
                     this.plugin.settings.mailbox = value;
                     await this.plugin.saveSettings();
-                }));
+                });
+            });
+
+        mailboxSetting.addButton(button => {
+            button
+                .setIcon('refresh-cw')
+                .setTooltip('Load available mailboxes')
+                .onClick(async () => {
+                    button.setDisabled(true);
+                    const currentValue = this.plugin.settings.mailbox;
+
+                    try {
+                        // Clear the dropdown first
+                        this.mailboxDropdown.innerHTML = '';
+
+                        // Add a placeholder option while loading
+                        const loadingOption = document.createElement('option');
+                        loadingOption.text = 'Loading mailboxes...';
+                        loadingOption.disabled = true;
+                        this.mailboxDropdown.appendChild(loadingOption);
+                        this.mailboxDropdown.value = 'Loading mailboxes...';
+
+                        // Fetch mailboxes
+                        const mailboxes = await this.plugin.client.getMailboxNames();
+
+                        // Clear the dropdown again
+                        this.mailboxDropdown.innerHTML = '';
+
+                        // Add all the mailboxes
+                        mailboxes.forEach(mailbox => {
+                            const option = document.createElement('option');
+                            option.value = mailbox;
+                            option.text = mailbox;
+                            this.mailboxDropdown.appendChild(option);
+                        });
+
+                        // Set the value back to the current setting if it exists in the list
+                        if (mailboxes.includes(currentValue)) {
+                            this.mailboxDropdown.value = currentValue;
+                        } else if (mailboxes.length > 0) {
+                            // Set to the first mailbox if current doesn't exist
+                            this.plugin.settings.mailbox = mailboxes[0];
+                            this.mailboxDropdown.value = mailboxes[0];
+                            await this.plugin.saveSettings();
+                        }
+                    } catch (error) {
+                        console.error('Error fetching mailboxes:', error);
+
+                        // Reset dropdown to just show the current value in case of error
+                        this.mailboxDropdown.innerHTML = '';
+                        const option = document.createElement('option');
+                        option.value = currentValue;
+                        option.text = currentValue;
+                        this.mailboxDropdown.appendChild(option);
+                        this.mailboxDropdown.value = currentValue;
+                    } finally {
+                        button.setDisabled(false);
+                    }
+                });
+        });
+
     }
 }
