@@ -33,10 +33,10 @@ export default class MyPlugin extends Plugin {
 
         // This adds a simple command that can be triggered anywhere
         this.addCommand({
-            id: 'open-sample-modal-simple',
-            name: 'Open sample modal (simple)',
+            id: 'email-to-obsidian-note',
+            name: 'Fetch email to Obsidian note',
             callback: () => {
-                new SampleModal(this.app).open();
+                new UseImapClient().do();
             }
         });
 
@@ -66,20 +66,18 @@ export default class MyPlugin extends Plugin {
     }
 }
 
-class SampleModal extends Modal {
-    constructor(app: App) {
-        super(app);
+
+class UseImapClient {
+    private client: ImapClient;
+
+    constructor() {
+        const config = new ImapConfig('you', 'you', 'imap.example.com', "993", true, 'Obsidian');
+        this.client = new ImapClient(config);
     }
 
-    onOpen() {
-        const {contentEl} = this;
-        contentEl.setText('Woah!');
-
-        const config = new ImapConfig('you', 'you', 'imap.example.com', "993", true, 'Obsidian');
-
-        const client = new ImapClient(config);
-        client.connect();
-        client.fetch(3).then(
+    do(n: number = 3) {
+        this.client.connect();
+        this.client.fetch(n).then(
             (emailInfos) => {
                 console.log('Fetched emails:', emailInfos);
             }
@@ -88,24 +86,18 @@ class SampleModal extends Modal {
             }
         );
 
-        client.markAsRead([1]).then();
+        this.client.markAsRead([1]).then();
 
-        client.getAvailableMailboxes().then(
+        this.client.getAvailableMailboxes().then(
             (mailboxes) => {
                 console.log('Available mailboxes:', mailboxes);
-                client.terminate();
+                this.client.terminate();
             }
         ).catch((err) => {
                 console.error('Error fetching mailboxes:', err);
-                client.terminate();
+                this.client.terminate();
             }
-        )
-
-    }
-
-    onClose() {
-        const {contentEl} = this;
-        contentEl.empty();
+        );
     }
 }
 
