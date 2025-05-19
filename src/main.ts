@@ -4,9 +4,7 @@ import {ImapConfig} from "./models";
 import {FolderSuggestions} from "./folderSuggestions";
 
 
-// Remember to rename these classes and interfaces!
-
-interface MyPluginSettings {
+interface EmailImporterSettings {
 	username: string;
 	password: string;
 	host: string;
@@ -16,7 +14,7 @@ interface MyPluginSettings {
 	savePath: string;
 }
 
-const DEFAULT_SETTINGS: MyPluginSettings = {
+const DEFAULT_SETTINGS: EmailImporterSettings = {
 	username: 'username',
 	password: 'password',
 	host: 'imap.example.com',
@@ -26,8 +24,8 @@ const DEFAULT_SETTINGS: MyPluginSettings = {
 	savePath: '/',
 }
 
-export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+export default class EmailImporterPlugin extends Plugin {
+	settings: EmailImporterSettings;
 	client: UseImapClient;
 
 	async onload() {
@@ -43,7 +41,7 @@ export default class MyPlugin extends Plugin {
 		});
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
+		this.addSettingTab(new EmailImporterSettingsTab(this.app, this));
 	}
 
 	onunload() {
@@ -62,9 +60,9 @@ export default class MyPlugin extends Plugin {
 
 class UseImapClient {
 	private client: ImapClient;
-	private plugin: MyPlugin;
+	private plugin: EmailImporterPlugin;
 
-	constructor(plugin: MyPlugin) {
+	constructor(plugin: EmailImporterPlugin) {
 		this.plugin = plugin;
 		const config = new ImapConfig(plugin.settings.username, plugin.settings.password, plugin.settings.host, plugin.settings.port, true, plugin.settings.mailbox);
 		this.client = new ImapClient(config);
@@ -108,12 +106,12 @@ class UseImapClient {
 	}
 }
 
-class SampleSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
+class EmailImporterSettingsTab extends PluginSettingTab {
+	plugin: EmailImporterPlugin;
 	mailboxDropdown: HTMLSelectElement;
 	folderInput: HTMLInputElement;
 
-	constructor(app: App, plugin: MyPlugin) {
+	constructor(app: App, plugin: EmailImporterPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}

@@ -1,11 +1,11 @@
 import {App} from "obsidian";
-import MyPlugin from "./main";
+import EmailImporterPlugin from "./main";
 
 export class FolderSuggestions {
 	app: App;
-	plugin: MyPlugin;
+	plugin: EmailImporterPlugin;
 
-	constructor(app: App, plugin: MyPlugin) {
+	constructor(app: App, plugin: EmailImporterPlugin) {
 		this.app = app;
 		this.plugin = plugin;
 	}
