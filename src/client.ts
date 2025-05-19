@@ -108,7 +108,6 @@ class ImapClient {
                     }
 
                     if (box.messages.total === 0) {
-                        this.terminate();
                         resolve([]);
                         return;
                     }
