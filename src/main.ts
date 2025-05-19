@@ -1,5 +1,5 @@
 import ImapClient from "./client";
-import {App, Plugin, PluginSettingTab, Setting} from 'obsidian';
+import {App, Plugin, PluginSettingTab, Setting, moment, Notice} from 'obsidian';
 import {ImapConfig} from "./models";
 
 
@@ -76,6 +76,20 @@ class UseImapClient {
 		await this.client.connect();
 		const emailInfos = await this.client.fetch(n, true);
 		const unreadEmails = emailInfos.filter(email => email.isUnread);
+
+		for (const email of unreadEmails) {
+			const formattedDate = moment(email.date).format('YYYYMMDD.HHmmss');
+			const noteContent = email.body;
+			const noteName = `${formattedDate}-EmailToNote`;
+			try {
+				await this.plugin.app.vault.create(`${noteName}.md`, noteContent);
+			} catch (error) {
+				console.error(`Failed to create file for email: ${noteName}`, error);
+			}
+		}
+
+		new Notice(`Processed ${unreadEmails.length} unread emails.`);
+
 		if (unreadEmails.length > 0) {
 			await this.client.markAsRead(unreadEmails.map(x => x.uid));
 		}
