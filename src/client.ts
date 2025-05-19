@@ -72,7 +72,7 @@ class ImapClient {
     async markAsRead(uid: number | number[]) {
         this.imap.once('ready', () => {
             this.openInbox(() => {
-                this.imap.setFlags(uid, ['\\Seen'], (err) => {
+                this.imap.setFlags(uid, ['\\Seen'], (err: any) => {
                     if (err) {
                         console.error('Error marking message as read:', err);
                     } else {
@@ -86,7 +86,7 @@ class ImapClient {
     async getAvailableMailboxes(): Promise<string[]> {
         return new Promise((resolve, reject) => {
             this.imap.once('ready', () => {
-                this.imap.getBoxes((err, boxes) => {
+                this.imap.getBoxes((err: any, boxes: any) => {
                     if (err) {
                         console.error('Error getting mailboxes:', err);
                         reject(err);
