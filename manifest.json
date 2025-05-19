@@ -1,9 +1,9 @@
 {
-	"id": "email-importer-via-imap",
-	"name": "Email Importer via IMAP",
+	"id": "obsidian-plugin-email-importer-via-imap",
+	"name": "Email Importer",
 	"version": "0.1.0",
 	"minAppVersion": "0.15.0",
-	"description": "Import Emails sent to a specific mailbox into your obsidian notes.",
+	"description": "Import emails sent to a specified inbox into Obsidian using IMAP.",
 	"author": "Cédric Uden",
 	"authorUrl": "https://github.com/cedric-uden",
 	"isDesktopOnly": true
