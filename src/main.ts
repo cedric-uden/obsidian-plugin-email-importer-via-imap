@@ -66,6 +66,13 @@ class UseImapClient {
         this.client = new ImapClient(config);
     }
 
+    async getMailboxNames() {
+        this.client.connect();
+        const mailboxes = await this.client.getAvailableMailboxes()
+        this.client.terminate();
+        return mailboxes;
+    }
+
     do(n: number = 3) {
         this.client.connect();
         this.client.fetch(n).then(
@@ -77,18 +84,9 @@ class UseImapClient {
             }
         );
 
-        this.client.markAsRead([1]).then();
-
-        this.client.getAvailableMailboxes().then(
-            (mailboxes) => {
-                console.log('Available mailboxes:', mailboxes);
-                this.client.terminate();
-            }
-        ).catch((err) => {
-                console.error('Error fetching mailboxes:', err);
-                this.client.terminate();
-            }
-        );
+        this.client.markAsRead([1]).then(() => {
+            this.client.terminate();
+        });
     }
 }
 
