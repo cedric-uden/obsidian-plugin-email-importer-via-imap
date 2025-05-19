@@ -5,8 +5,4 @@ WIP
 
 # Development
 
-Store `.env` file in `src` with the following variables:
-
-- IMAP_USER
-- IMAP_PASSWORD
-- IMAP_HOST
+Link `ln ~/git/cu/obsidian-email-importer/manifest.json .`
