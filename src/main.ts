@@ -1,5 +1,5 @@
 import ImapClient from "./client";
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { App, Plugin, PluginSettingTab, Setting } from 'obsidian';
 import {ImapConfig} from "./models";
 
 
