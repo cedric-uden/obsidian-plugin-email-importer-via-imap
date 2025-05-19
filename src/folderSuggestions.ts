@@ -203,17 +203,19 @@ export class FolderSuggestions {
 	private updateSelection(items: NodeListOf<Element>, index: number) {
 		// Clear previous selection
 		items.forEach(item => {
-			item.classList.remove('is-selected');
-			item.style.backgroundColor = '';
-			item.style.color = '';
+			const htmlItem = item as HTMLElement;
+			htmlItem.classList.remove('is-selected');
+			htmlItem.style.backgroundColor = '';
+			htmlItem.style.color = '';
 		});
 
 		// Apply selection styling
 		if (index >= 0 && items[index]) {
-			items[index].classList.add('is-selected');
-			items[index].style.backgroundColor = 'var(--interactive-accent)';
-			items[index].style.color = 'var(--text-on-accent)';
-			items[index].scrollIntoView({block: 'nearest'});
+			const selectedItem = items[index] as HTMLElement;
+			selectedItem.classList.add('is-selected');
+			selectedItem.style.backgroundColor = 'var(--interactive-accent)';
+			selectedItem.style.color = 'var(--text-on-accent)';
+			selectedItem.scrollIntoView({block: 'nearest'});
 		}
 	}
 }
