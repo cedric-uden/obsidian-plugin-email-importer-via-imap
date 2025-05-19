@@ -153,7 +153,7 @@ class EmailImporterSettingsTab extends PluginSettingTab {
 				}));
 
 		new Setting(containerEl)
-			.setName('IMAP Port')
+			.setName('IMAP port')
 			.addText(text => text
 				.setPlaceholder('Enter port')
 				.setValue(this.plugin.settings.port)
@@ -246,7 +246,7 @@ class EmailImporterSettingsTab extends PluginSettingTab {
 				}));
 
 		const folderSetting = new Setting(containerEl)
-			.setName('Email motes location')
+			.setName('Email notes location')
 			.setDesc('Choose where to save email notes')
 			.addText(text => {
 				this.folderInput = text.inputEl;
