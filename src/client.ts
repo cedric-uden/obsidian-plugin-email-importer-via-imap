@@ -27,16 +27,43 @@ class ImapClient {
 		});
 	}
 
+	private decodeQuotedPrintable(input: string): string {
+		// Replace =XX patterns with their corresponding characters
+		return input.replace(/=([0-9A-F]{2})/gi, (_, hexCode) => {
+			return String.fromCharCode(parseInt(hexCode, 16));
+		})
+			.replace(/=\r\n/g, '') // Remove soft line breaks
+			.replace(/=\n/g, '');  // Remove soft line breaks (Unix style)
+	}
+
 	private processMessageBody(stream: any, info: any, emailInfo: EmailInfo) {
-		let buffer = '';
-		stream.on('data', (chunk: any) => buffer += chunk.toString('utf8'));
+		let buffer = Buffer.alloc(0);
+		stream.on('data', (chunk: any) => {
+			buffer = Buffer.concat([buffer, chunk]);
+		});
 		stream.once('end', () => {
 			if (info.which === 'HEADER.FIELDS (FROM TO SUBJECT DATE)') {
-				const header = Connection.parseHeader(buffer);
+				const header = Connection.parseHeader(buffer.toString('utf8'));
 				emailInfo.subject = header.subject ? header.subject[0] : '';
 				emailInfo.date = header.date ? new Date(header.date[0]) : null;
 			} else if (info.which === 'TEXT') {
-				emailInfo.body = buffer.replace(/\r\n/g, "\n").replace(/\n+$/g, "");
+				// First get the raw text
+				let bodyText = buffer.toString('utf8');
+
+				// Check if it's quoted-printable encoded
+				if (bodyText.includes('=C3=')) {
+					// Decode quoted-printable to get UTF-8 bytes
+					const qpDecoded = this.decodeQuotedPrintable(bodyText);
+
+					// Convert the decoded string back to bytes, then properly interpret as UTF-8
+					const bytes = Buffer.from(qpDecoded, 'binary');
+					bodyText = bytes.toString('utf8');
+				}
+
+				// Clean up line endings
+				emailInfo.body = bodyText
+					.replace(/\r\n/g, "\n")
+					.replace(/\n+$/g, "");
 			}
 		});
 	}
