@@ -33,8 +33,8 @@ export default class EmailImporterPlugin extends Plugin {
 		this.client = new UseImapClient(this);
 
 		this.addCommand({
-			id: 'email-to-obsidian-note',
-			name: 'Fetch email to Obsidian note',
+			id: 'email-import',
+			name: 'Email import',
 			callback: () => {
 				this.client.do();
 			}
