@@ -1,31 +1,7 @@
-import {config} from './config';
 import ImapClient from "./client";
 import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import {ImapConfig} from "./models";
 
-
-const client = new ImapClient(config);
-client.connect();
-client.fetch(3).then(
-    (emailInfos) => {
-        console.log('Fetched emails:', emailInfos);
-    }
-).catch((err) => {
-        console.error('Error fetching emails:', err);
-    }
-);
-
-client.markAsRead([1]).then();
-
-client.getAvailableMailboxes().then(
-    (mailboxes) => {
-        console.log('Available mailboxes:', mailboxes);
-        client.terminate();
-    }
-).catch((err) => {
-        console.error('Error fetching mailboxes:', err);
-        client.terminate();
-    }
-)
 
 // Remember to rename these classes and interfaces!
 
@@ -126,6 +102,33 @@ class SampleModal extends Modal {
     onOpen() {
         const {contentEl} = this;
         contentEl.setText('Woah!');
+
+        const config = new ImapConfig('you', 'you', 'imap.example.com', "993", true, 'Obsidian');
+
+        const client = new ImapClient(config);
+        client.connect();
+        client.fetch(3).then(
+            (emailInfos) => {
+                console.log('Fetched emails:', emailInfos);
+            }
+        ).catch((err) => {
+                console.error('Error fetching emails:', err);
+            }
+        );
+
+        client.markAsRead([1]).then();
+
+        client.getAvailableMailboxes().then(
+            (mailboxes) => {
+                console.log('Available mailboxes:', mailboxes);
+                client.terminate();
+            }
+        ).catch((err) => {
+                console.error('Error fetching mailboxes:', err);
+                client.terminate();
+            }
+        )
+
     }
 
     onClose() {
