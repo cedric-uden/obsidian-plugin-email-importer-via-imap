@@ -75,9 +75,11 @@ class UseImapClient {
 
     async do(n: number = 3) {
         await this.client.connect();
-        const emailInfos = await this.client.fetch(n);
+        const emailInfos = await this.client.fetch(n, true);
 		const unreadEmails = emailInfos.filter(email => email.isUnread);
-        await this.client.markAsRead(unreadEmails.map(x => x.uid));
+		if (unreadEmails.length > 0) {
+        	await this.client.markAsRead(unreadEmails.map(x => x.uid));
+		}
         this.client.terminate();
     }
 }

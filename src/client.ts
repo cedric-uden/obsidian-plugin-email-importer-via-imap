@@ -126,7 +126,7 @@ class ImapClient {
 		});
 	}
 
-	fetch(nRecentMails = 5): Promise<EmailInfo[]> {
+	fetch(nRecentMails = 5, onlyUnread = false): Promise<EmailInfo[]> {
 		return new Promise((resolve, reject) => {
 			this.openInbox((err: any, box: any) => {
 				if (err) {
@@ -148,7 +148,13 @@ class ImapClient {
 
 				f.on('message', (msg: any) => {
 					this.getMessages(msg).then(emailInfo => {
-						emailInfos.push(emailInfo);
+						if (onlyUnread) {
+							if (emailInfo.isUnread) {
+								emailInfos.push(emailInfo);
+							}
+						} else {
+							emailInfos.push(emailInfo);
+						}
 					});
 				});
 
