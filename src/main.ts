@@ -27,7 +27,7 @@ export default class MyPlugin extends Plugin {
 
 	async onload() {
 		await this.loadSettings();
-		this.client = new UseImapClient(this.settings);
+		this.client = new UseImapClient(this);
 
 		this.addCommand({
 			id: 'email-to-obsidian-note',
@@ -57,9 +57,11 @@ export default class MyPlugin extends Plugin {
 
 class UseImapClient {
 	private client: ImapClient;
+	private plugin: MyPlugin;
 
-	constructor(settings: MyPluginSettings) {
-		const config = new ImapConfig(settings.username, settings.password, settings.host, settings.port, true, settings.mailbox);
+	constructor(plugin: MyPlugin) {
+		this.plugin = plugin;
+		const config = new ImapConfig(plugin.settings.username, plugin.settings.password, plugin.settings.host, plugin.settings.port, true, plugin.settings.mailbox);
 		this.client = new ImapClient(config);
 	}
 
