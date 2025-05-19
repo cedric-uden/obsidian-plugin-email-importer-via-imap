@@ -70,7 +70,7 @@ export class FolderSuggestions {
 
 			// Style the container
 			Object.assign(container.style, {
-				position: 'absolute',
+				position: 'fixed',
 				width: rect.width + 'px',
 				maxHeight: '200px',
 				overflowY: 'auto',
@@ -83,7 +83,10 @@ export class FolderSuggestions {
 				left: rect.left + 'px'
 			});
 
-			document.body.appendChild(container);
+			// Append to settings panel if we're in it, otherwise to body
+			const settingsPanel = inputEl.closest('.vertical-tab-content');
+			const parent = settingsPanel || document.body;
+			parent.appendChild(container);
 
 			// Add event listener to close the popup when clicking outside
 			setTimeout(() => {
