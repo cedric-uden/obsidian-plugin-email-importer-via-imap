@@ -122,7 +122,7 @@ class EmailImporterSettingsTab extends PluginSettingTab {
 		containerEl.empty();
 
 		new Setting(containerEl)
-			.setName('IMAP Username')
+			.setName('Email address')
 			.addText(text => text
 				.setPlaceholder('Enter username')
 				.setValue(this.plugin.settings.username)
@@ -132,7 +132,7 @@ class EmailImporterSettingsTab extends PluginSettingTab {
 				}));
 
 		new Setting(containerEl)
-			.setName('IMAP Password')
+			.setName('IMAP password')
 			.addText(text => text
 				.setPlaceholder('Enter password')
 				.setValue(this.plugin.settings.password)
@@ -143,7 +143,7 @@ class EmailImporterSettingsTab extends PluginSettingTab {
 
 
 		new Setting(containerEl)
-			.setName('IMAP Hostname')
+			.setName('IMAP hostname')
 			.addText(text => text
 				.setPlaceholder('Enter hostname')
 				.setValue(this.plugin.settings.host)
@@ -163,7 +163,7 @@ class EmailImporterSettingsTab extends PluginSettingTab {
 				}));
 
 		const mailboxSetting = new Setting(containerEl)
-			.setName('IMAP Mailbox')
+			.setName('IMAP mailbox')
 			.setDesc('Select a mailbox or press refresh to load available mailboxes')
 			.addDropdown(dropdown => {
 				this.mailboxDropdown = dropdown.selectEl;
@@ -235,7 +235,7 @@ class EmailImporterSettingsTab extends PluginSettingTab {
 		});
 
 		new Setting(containerEl)
-			.setName('N Last Messages')
+			.setName('N last messages')
 			.setDesc("Determine how many emails to load to find unread emails.")
 			.addText(text => text
 				.setPlaceholder('N Last Messages')
@@ -246,7 +246,7 @@ class EmailImporterSettingsTab extends PluginSettingTab {
 				}));
 
 		const folderSetting = new Setting(containerEl)
-			.setName('Email Notes Location')
+			.setName('Email motes location')
 			.setDesc('Choose where to save email notes')
 			.addText(text => {
 				this.folderInput = text.inputEl;
