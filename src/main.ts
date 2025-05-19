@@ -1,5 +1,5 @@
 import ImapClient from "./client";
-import {App, Plugin, PluginSettingTab, Setting, moment, Notice} from 'obsidian';
+import {App, Plugin, PluginSettingTab, Setting, moment, Notice, DropdownComponent} from 'obsidian';
 import {ImapConfig} from "./models";
 
 
@@ -12,6 +12,7 @@ interface MyPluginSettings {
 	port: string;
 	mailbox: string;
 	nLastMessages: string;
+	savePath: string;
 }
 
 const DEFAULT_SETTINGS: MyPluginSettings = {
@@ -21,6 +22,7 @@ const DEFAULT_SETTINGS: MyPluginSettings = {
 	port: '993',
 	mailbox: 'INBOX',
 	nLastMessages: '5',
+	savePath: '/',
 }
 
 export default class MyPlugin extends Plugin {
@@ -84,10 +86,15 @@ class UseImapClient {
 			const formattedDate = moment(email.date).format('YYYYMMDD.HHmmss');
 			const noteContent = email.body;
 			const noteName = `${formattedDate}-EmailToNote`;
+
+			// Construct the full file path using the configured save path
+			const savePath = this.plugin.settings.savePath === '/'
+				? `${noteName}.md`
+				: `${this.plugin.settings.savePath}/${noteName}.md`;
 			try {
-				await this.plugin.app.vault.create(`${noteName}.md`, noteContent);
+				await this.plugin.app.vault.create(savePath, noteContent);
 			} catch (error) {
-				console.error(`Failed to create file for email: ${noteName}`, error);
+				console.error(`Failed to create file for email: ${savePath}`, error);
 			}
 		}
 
@@ -103,10 +110,37 @@ class UseImapClient {
 class SampleSettingTab extends PluginSettingTab {
 	plugin: MyPlugin;
 	mailboxDropdown: HTMLSelectElement;
+	folderDropdown: DropdownComponent;
 
 	constructor(app: App, plugin: MyPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
+	}
+
+	private getFolders(): string[] {
+		const folders: string[] = [];
+		this.app.vault.getAllLoadedFiles().forEach((file: any) => {
+			if (file.children) {
+				folders.push(file.path);
+			}
+		});
+		return folders;
+	}
+
+	private async loadFolders(dropdown: any): Promise<void> {
+		dropdown.selectEl.innerHTML = '';
+
+		const folders = this.getFolders();
+
+		folders.forEach(folder => {
+			dropdown.addOption(folder, folder);
+		});
+
+		if (folders.includes(this.plugin.settings.savePath)) {
+			dropdown.setValue(this.plugin.settings.savePath);
+		} else {
+			dropdown.setValue('/');
+		}
 	}
 
 	display(): void {
@@ -237,5 +271,30 @@ class SampleSettingTab extends PluginSettingTab {
 					this.plugin.settings.nLastMessages = value;
 					await this.plugin.saveSettings();
 				}));
+
+		const folderSetting = new Setting(containerEl)
+			.setName('Email Notes Location')
+			.setDesc('Choose where to save email notes')
+			.addDropdown(dropdown => {
+				dropdown.addOption(this.plugin.settings.savePath,
+					this.plugin.settings.savePath || '/');
+				dropdown.setValue(this.plugin.settings.savePath);
+				dropdown.onChange(async (value) => {
+					this.plugin.settings.savePath = value;
+					await this.plugin.saveSettings();
+				});
+
+				this.folderDropdown = dropdown;
+				this.loadFolders(dropdown).then();
+			});
+
+		folderSetting.addButton(button => {
+			button
+				.setIcon('refresh-cw')
+				.setTooltip('Refresh folder list')
+				.onClick(() => {
+					this.loadFolders(this.folderDropdown).then();
+				});
+		});
 	}
 }
