@@ -122,10 +122,56 @@ export class FolderSuggestions {
 			// Initial population of all folders
 			updateSuggestions(folders, resultsList, onSelect, '');
 
+			// Track currently selected index
+			let selectedIndex = -1;
+
+			// Handle keyboard navigation
+			searchInput.addEventListener('keydown', (e) => {
+				const items = resultsList.querySelectorAll('.suggestion-item');
+
+				if (e.key === 'ArrowDown') {
+					e.preventDefault();
+					selectedIndex = (selectedIndex + 1) % items.length;
+					updateSelection(items, selectedIndex);
+				} else if (e.key === 'ArrowUp') {
+					e.preventDefault();
+					selectedIndex = selectedIndex <= 0 ? items.length - 1 : selectedIndex - 1;
+					updateSelection(items, selectedIndex);
+				} else if (e.key === 'Enter') {
+					e.preventDefault();
+					if (selectedIndex >= 0 && items[selectedIndex]) {
+						const path = items[selectedIndex].getAttribute('data-path');
+						if (path) onSelect(path);
+					}
+				} else if (e.key === 'Escape') {
+					container.remove();
+				}
+			});
+
+			function updateSelection(items: NodeListOf<Element>, index: number) {
+				// Clear previous selection
+				items.forEach(item => {
+					item.classList.remove('is-selected');
+					item.style.backgroundColor = '';
+					item.style.color = '';
+				});
+
+				// Apply selection styling
+				if (index >= 0 && items[index]) {
+					items[index].classList.add('is-selected');
+					items[index].style.backgroundColor = 'var(--interactive-accent)';
+					items[index].style.color = 'var(--text-on-accent)';
+
+					// Ensure the selected item is visible
+					items[index].scrollIntoView({ block: 'nearest' });
+				}
+			}
+
 			// Update on search input change
 			searchInput.addEventListener('input', () => {
 				const query = searchInput.value.toLowerCase();
 				updateSuggestions(folders, resultsList, onSelect, query);
+				selectedIndex = -1; // Reset selection when input changes
 			});
 
 			return searchInput;
@@ -151,6 +197,7 @@ export class FolderSuggestions {
 		function addSuggestionItem(path: string, resultsList: HTMLElement, onSelect: (path: string) => void, query: string) {
 			const item = document.createElement('div');
 			item.addClass('suggestion-item');
+			item.setAttribute('data-path', path); // Store path as data attribute
 
 			Object.assign(item.style, {
 				padding: '6px 8px',
@@ -179,6 +226,8 @@ export class FolderSuggestions {
 
 			// Hover effect
 			item.addEventListener('mouseenter', () => {
+				resultsList.querySelectorAll('.suggestion-item').forEach(el =>
+					el.classList.remove('is-selected'));
 				item.style.backgroundColor = 'var(--interactive-accent)';
 				item.style.color = 'var(--text-on-accent)';
 			});
