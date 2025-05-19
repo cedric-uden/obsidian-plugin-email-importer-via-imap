@@ -92,14 +92,23 @@ class ImapClient {
 		this.imap.end();
 	}
 
-	async markAsRead(uid: number | number[]) {
-		await this.openInbox(() => {
-			this.imap.setFlags(uid, ['\\Seen'], (err: any) => {
+	async markAsRead(uid: number | number[]): Promise<void> {
+		return new Promise((resolve, reject) => {
+			this.openInbox((err) => {
 				if (err) {
-					console.error('Error marking message as read:', err);
-				} else {
-					console.log(`Message(s) ${uid} marked as read`);
+					console.error('Error opening mailbox:', err);
+					reject(err);
+					return;
 				}
+
+				this.imap.setFlags(uid, ['\\Seen'], (flagErr: any) => {
+					if (flagErr) {
+						console.error('Error marking message as read:', flagErr);
+						reject(flagErr);
+					} else {
+						resolve();
+					}
+				});
 			});
 		});
 	}
