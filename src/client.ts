@@ -154,6 +154,8 @@ class ImapClient {
 	}
 
 	fetch(nRecentMails = 5, onlyUnread = false): Promise<EmailInfo[]> {
+
+		const messagePromises: Promise<EmailInfo>[] = [];
 		return new Promise((resolve, reject) => {
 			this.openInbox((err: any, box: any) => {
 				if (err) {
@@ -174,9 +176,11 @@ class ImapClient {
 				});
 
 				f.on('message', (msg: any) => {
-					this.getMessages(msg).then(emailInfo => {
+					const messagePromise = this.getMessages(msg).then(emailInfo => {
 						emails.push(emailInfo);
+						return emailInfo;
 					});
+					messagePromises.push(messagePromise);
 				});
 
 				f.once('error', (err: string) => {
@@ -185,7 +189,14 @@ class ImapClient {
 				});
 
 				f.once('end', () => {
-					resolve(emails);
+					Promise.all(messagePromises)
+						.then(() => {
+							console.log(emails);
+							resolve(emails);
+						})
+						.catch(err => {
+							reject(err);
+						});
 				});
 			}).then();
 			this.imap.once('error', (err: any) => reject(err));
