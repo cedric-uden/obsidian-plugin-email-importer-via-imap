@@ -167,7 +167,7 @@ class ImapClient {
 				}
 
 				const range = this.calculateFetchRange(box.messages.total, nRecentMails);
-				const emailInfos: EmailInfo[] = [];
+				const emails: EmailInfo[] = [];
 				const f = this.imap.seq.fetch(range, {
 					bodies: ['HEADER.FIELDS (FROM TO SUBJECT DATE)', 'TEXT'],
 					struct: true
@@ -175,13 +175,7 @@ class ImapClient {
 
 				f.on('message', (msg: any) => {
 					this.getMessages(msg).then(emailInfo => {
-						if (onlyUnread) {
-							if (emailInfo.isUnread) {
-								emailInfos.push(emailInfo);
-							}
-						} else {
-							emailInfos.push(emailInfo);
-						}
+						emails.push(emailInfo);
 					});
 				});
 
@@ -191,7 +185,7 @@ class ImapClient {
 				});
 
 				f.once('end', () => {
-					resolve(emailInfos);
+					resolve(emails);
 				});
 			}).then();
 			this.imap.once('error', (err: any) => reject(err));
