@@ -1,5 +1,6 @@
 import Connection, {Box} from "./imap/lib/Connection";
 import {EmailInfo, ImapConfig} from "./models";
+import {EmailFilterManager, UnreadFilterStrategy} from "./filterStategy";
 
 class ImapClient {
 	private imap: Connection;
@@ -191,8 +192,12 @@ class ImapClient {
 				f.once('end', () => {
 					Promise.all(messagePromises)
 						.then(() => {
-							console.log(emails);
-							resolve(emails);
+							const filterManager = new EmailFilterManager();
+							if (onlyUnread) {
+								filterManager.addFilter(new UnreadFilterStrategy());
+							}
+							const filteredEmails = filterManager.filterEmails(emails);
+							resolve(filteredEmails);
 						})
 						.catch(err => {
 							reject(err);
