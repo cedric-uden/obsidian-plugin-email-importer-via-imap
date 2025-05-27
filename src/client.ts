@@ -1,6 +1,6 @@
 import Connection, {Box} from "./imap/lib/Connection";
 import {EmailInfo, ImapConfig} from "./models";
-import {EmailFilterManager, UnreadFilterStrategy} from "./filterStategy";
+import {EmailFilterManager, PrefixFilterStrategy, UnreadFilterStrategy} from "./filterStategy";
 
 class ImapClient {
 	private imap: Connection;
@@ -195,6 +195,9 @@ class ImapClient {
 							const filterManager = new EmailFilterManager();
 							if (onlyUnread) {
 								filterManager.addFilter(new UnreadFilterStrategy());
+							}
+							if (this.config.matchPrefix.trim() !== '') {
+								filterManager.addFilter(new PrefixFilterStrategy(this.config.matchPrefix));
 							}
 							const filteredEmails = filterManager.filterEmails(emails);
 							resolve(filteredEmails);

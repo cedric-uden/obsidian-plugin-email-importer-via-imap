@@ -27,6 +27,7 @@ class ImapConfig {
     port: number;
     tls: boolean;
     mailbox: string;
+	matchPrefix: string;
 
     constructor(
         user: string,
@@ -35,6 +36,7 @@ class ImapConfig {
         port: string,
         tls: boolean,
         mailbox: string,
+		matchPrefix: string,
     ) {
         this.user = user;
         this.password = password;
@@ -42,6 +44,7 @@ class ImapConfig {
         this.port = parseInt(port);
         this.tls = tls;
         this.mailbox = mailbox;
+		this.matchPrefix = matchPrefix;
     }
 }
 

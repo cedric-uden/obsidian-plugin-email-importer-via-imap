@@ -10,6 +10,7 @@ interface EmailImporterSettings {
 	host: string;
 	port: string;
 	mailbox: string;
+	matchPrefix: string;
 	nLastMessages: string;
 	savePath: string;
 }
@@ -20,6 +21,7 @@ const DEFAULT_SETTINGS: EmailImporterSettings = {
 	host: 'imap.example.com',
 	port: '993',
 	mailbox: 'INBOX',
+	matchPrefix: '',
 	nLastMessages: '5',
 	savePath: '/',
 }
@@ -64,7 +66,7 @@ class UseImapClient {
 
 	constructor(plugin: EmailImporterPlugin) {
 		this.plugin = plugin;
-		const config = new ImapConfig(plugin.settings.username, plugin.settings.password, plugin.settings.host, plugin.settings.port, true, plugin.settings.mailbox);
+		const config = new ImapConfig(plugin.settings.username, plugin.settings.password, plugin.settings.host, plugin.settings.port, true, plugin.settings.mailbox, plugin.settings.matchPrefix);
 		this.client = new ImapClient(config);
 	}
 
@@ -175,6 +177,18 @@ class EmailImporterSettingsTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				});
 			});
+
+		const matchPrefix = new Setting(containerEl)
+			.setName('Email match prefix')
+			.setDesc('Only import emails that match exactly this prefix')
+			.addText(text => text
+				.setPlaceholder('Prefix')
+				.setValue(this.plugin.settings.matchPrefix)
+				.onChange(async (value) => {
+					this.plugin.settings.matchPrefix = value;
+					await this.plugin.saveSettings();
+				}));
+
 
 		mailboxSetting.addButton(button => {
 			button

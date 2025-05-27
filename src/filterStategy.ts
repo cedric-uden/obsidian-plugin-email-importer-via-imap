@@ -4,6 +4,15 @@ interface EmailFilterStrategy {
 	shouldInclude(email: EmailInfo): boolean;
 }
 
+class PrefixFilterStrategy implements EmailFilterStrategy {
+	constructor(private prefix: string) {}
+
+	shouldInclude(email: EmailInfo): boolean {
+		if (!this.prefix) return true;
+		return email.subject.startsWith(this.prefix);
+	}
+}
+
 class UnreadFilterStrategy implements EmailFilterStrategy {
 	shouldInclude(email: EmailInfo): boolean {
 		return email.isUnread === true;
@@ -29,6 +38,7 @@ class EmailFilterManager {
 }
 
 export {
+	PrefixFilterStrategy,
 	UnreadFilterStrategy,
 	EmailFilterManager
 }
