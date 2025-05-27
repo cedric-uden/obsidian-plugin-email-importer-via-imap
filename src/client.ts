@@ -1,5 +1,6 @@
 import Connection, {Box} from "./imap/lib/Connection";
 import {EmailInfo, ImapConfig} from "./models";
+import {EmailFilterManager, PrefixFilterStrategy, UnreadFilterStrategy} from "./filterStategy";
 
 class ImapClient {
 	private imap: Connection;
@@ -19,7 +20,7 @@ class ImapClient {
 
 	private getMessages(msg: any): Promise<EmailInfo> {
 		return new Promise((resolve) => {
-			const emailInfo = new EmailInfo();
+			const emailInfo = new EmailInfo(new Date());
 
 			msg.on('body', (stream: any, info: any) => this.processMessageBody(stream, info, emailInfo));
 			msg.once('attributes', (attrs: any) => this.processMessageAttributes(attrs, emailInfo));
@@ -45,7 +46,7 @@ class ImapClient {
 			if (info.which === 'HEADER.FIELDS (FROM TO SUBJECT DATE)') {
 				const header = Connection.parseHeader(buffer.toString('utf8'));
 				emailInfo.subject = header.subject ? header.subject[0] : '';
-				emailInfo.date = header.date ? new Date(header.date[0]) : null;
+				emailInfo.date = header.date ? new Date(header.date[0]) : new Date();
 			} else if (info.which === 'TEXT') {
 				// First get the raw text
 				let bodyText = buffer.toString('utf8');
@@ -154,6 +155,8 @@ class ImapClient {
 	}
 
 	fetch(nRecentMails = 5, onlyUnread = false): Promise<EmailInfo[]> {
+
+		const messagePromises: Promise<EmailInfo>[] = [];
 		return new Promise((resolve, reject) => {
 			this.openInbox((err: any, box: any) => {
 				if (err) {
@@ -167,22 +170,18 @@ class ImapClient {
 				}
 
 				const range = this.calculateFetchRange(box.messages.total, nRecentMails);
-				const emailInfos: EmailInfo[] = [];
+				const emails: EmailInfo[] = [];
 				const f = this.imap.seq.fetch(range, {
 					bodies: ['HEADER.FIELDS (FROM TO SUBJECT DATE)', 'TEXT'],
 					struct: true
 				});
 
 				f.on('message', (msg: any) => {
-					this.getMessages(msg).then(emailInfo => {
-						if (onlyUnread) {
-							if (emailInfo.isUnread) {
-								emailInfos.push(emailInfo);
-							}
-						} else {
-							emailInfos.push(emailInfo);
-						}
+					const messagePromise = this.getMessages(msg).then(emailInfo => {
+						emails.push(emailInfo);
+						return emailInfo;
 					});
+					messagePromises.push(messagePromise);
 				});
 
 				f.once('error', (err: string) => {
@@ -191,7 +190,21 @@ class ImapClient {
 				});
 
 				f.once('end', () => {
-					resolve(emailInfos);
+					Promise.all(messagePromises)
+						.then(() => {
+							const filterManager = new EmailFilterManager();
+							if (onlyUnread) {
+								filterManager.addFilter(new UnreadFilterStrategy());
+							}
+							if (this.config.matchPrefix.trim() !== '') {
+								filterManager.addFilter(new PrefixFilterStrategy(this.config.matchPrefix));
+							}
+							const filteredEmails = filterManager.filterEmails(emails);
+							resolve(filteredEmails);
+						})
+						.catch(err => {
+							reject(err);
+						});
 				});
 			}).then();
 			this.imap.once('error', (err: any) => reject(err));

@@ -1,19 +1,19 @@
 class EmailInfo {
+    date: Date;
     subject: string;
-    date: Date | null;
     body: string;
     isUnread: boolean | null;
     uid: number;
 
     constructor(
+        date: Date,
         subject: string = '',
-        date: Date | null = null,
         body: string = '',
         isUnread: boolean | null = null,
         uid: number = 0,
     ) {
-        this.subject = subject;
         this.date = date;
+        this.subject = subject;
         this.body = body;
         this.isUnread = isUnread;
         this.uid = uid;
@@ -27,14 +27,16 @@ class ImapConfig {
     port: number;
     tls: boolean;
     mailbox: string;
+	matchPrefix: string;
 
     constructor(
-        user: string = '',
-        password: string = '',
-        host: string = '',
-        port: string = '993',
-        tls: boolean = true,
-        mailbox: string = 'INBOX',
+        user: string,
+        password: string,
+        host: string,
+        port: string,
+        tls: boolean,
+        mailbox: string,
+		matchPrefix: string,
     ) {
         this.user = user;
         this.password = password;
@@ -42,6 +44,7 @@ class ImapConfig {
         this.port = parseInt(port);
         this.tls = tls;
         this.mailbox = mailbox;
+		this.matchPrefix = matchPrefix;
     }
 }
 
