@@ -29,12 +29,12 @@ class ImapConfig {
     mailbox: string;
 
     constructor(
-        user: string = '',
-        password: string = '',
-        host: string = '',
-        port: string = '993',
-        tls: boolean = true,
-        mailbox: string = 'INBOX',
+        user: string,
+        password: string,
+        host: string,
+        port: string,
+        tls: boolean,
+        mailbox: string,
     ) {
         this.user = user;
         this.password = password;
