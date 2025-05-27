@@ -1,19 +1,19 @@
 class EmailInfo {
+    date: Date;
     subject: string;
-    date: Date | null;
     body: string;
     isUnread: boolean | null;
     uid: number;
 
     constructor(
+        date: Date,
         subject: string = '',
-        date: Date | null = null,
         body: string = '',
         isUnread: boolean | null = null,
         uid: number = 0,
     ) {
-        this.subject = subject;
         this.date = date;
+        this.subject = subject;
         this.body = body;
         this.isUnread = isUnread;
         this.uid = uid;

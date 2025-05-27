@@ -19,7 +19,7 @@ class ImapClient {
 
 	private getMessages(msg: any): Promise<EmailInfo> {
 		return new Promise((resolve) => {
-			const emailInfo = new EmailInfo();
+			const emailInfo = new EmailInfo(new Date());
 
 			msg.on('body', (stream: any, info: any) => this.processMessageBody(stream, info, emailInfo));
 			msg.once('attributes', (attrs: any) => this.processMessageAttributes(attrs, emailInfo));
@@ -45,7 +45,7 @@ class ImapClient {
 			if (info.which === 'HEADER.FIELDS (FROM TO SUBJECT DATE)') {
 				const header = Connection.parseHeader(buffer.toString('utf8'));
 				emailInfo.subject = header.subject ? header.subject[0] : '';
-				emailInfo.date = header.date ? new Date(header.date[0]) : null;
+				emailInfo.date = header.date ? new Date(header.date[0]) : new Date();
 			} else if (info.which === 'TEXT') {
 				// First get the raw text
 				let bodyText = buffer.toString('utf8');
