@@ -1,5 +1,13 @@
 .folder-suggestion-container {
 	font-size: var(--font-ui-small);
+	position: fixed;
+	max-height: 200px;
+	overflow-y: auto;
+	z-index: 999;
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .suggestion-item:hover {
@@ -9,4 +17,46 @@
 .suggestion-item.is-selected {
 	background-color: var(--interactive-accent);
 	color: var(--text-on-accent);
+}
+
+.suggestion-item.mouseenter {
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
+
+.suggestion-item.mouseleave {
+	background-color: unset;
+	color : unset;
+}
+
+
+.folder-suggestion-no-results-message {
+	padding: 8px;
+	color: var(--text-muted);
+	text-align: center;
+}
+
+.folder-suggestion-search-container {
+	padding: 8px;
+}
+
+.folder-suggestion-search-input {
+	padding: 4px;
+	width: 100%;
+}
+
+.folder-suggestion-update-selection-html-item {
+	background-color: unset;
+	color: unset;
+}
+
+.folder-suggestion-update-selection-selected-item {
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
+
+.folder-suggestion-suggestion-item {
+	padding: 6px 8px;
+	cursor: pointer;
+	border-bottom: 1px solid var(--background-modifier-border);
 }
