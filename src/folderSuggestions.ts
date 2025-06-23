@@ -45,15 +45,7 @@ export class FolderSuggestions {
 		container.addClass('folder-suggestion-container');
 
 		Object.assign(container.style, {
-			position: 'fixed',
 			width: rect.width + 'px',
-			maxHeight: '200px',
-			overflowY: 'auto',
-			zIndex: '999',
-			background: 'var(--background-primary)',
-			border: '1px solid var(--background-modifier-border)',
-			borderRadius: '4px',
-			boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
 			top: (rect.bottom + 5) + 'px',
 			left: rect.left + 'px'
 		});
@@ -84,9 +76,7 @@ export class FolderSuggestions {
 		if (resultsList.childElementCount === 0) {
 			const noResults = document.createElement('div');
 			noResults.textContent = 'No matching folders found';
-			noResults.style.padding = '8px';
-			noResults.style.color = 'var(--text-muted)';
-			noResults.style.textAlign = 'center';
+			noResults.classList.add('folder-suggestion-no-results-message');
 			resultsList.appendChild(noResults);
 		}
 	}
@@ -95,12 +85,7 @@ export class FolderSuggestions {
 		const item = document.createElement('div');
 		item.addClass('suggestion-item');
 		item.setAttribute('data-path', path);
-
-		Object.assign(item.style, {
-			padding: '6px 8px',
-			cursor: 'pointer',
-			borderBottom: '1px solid var(--background-modifier-border)'
-		});
+		item.addClass('folder-suggestion-suggestion-item');
 
 		// Highlight the matching part if there's a query
 		if (query && path !== '/') {
@@ -113,7 +98,11 @@ export class FolderSuggestions {
 				const match = path.substring(index, index + query.length);
 				const after = path.substring(index + query.length);
 
-				item.innerHTML = before + '<strong>' + match + '</strong>' + after;
+				item.appendChild(document.createTextNode(before));
+				const strong = document.createElement('strong');
+				strong.textContent = match;
+				item.appendChild(strong);
+				item.appendChild(document.createTextNode(after));
 			} else {
 				item.textContent = path;
 			}
@@ -125,14 +114,9 @@ export class FolderSuggestions {
 		item.addEventListener('mouseenter', () => {
 			resultsList.querySelectorAll('.suggestion-item').forEach(el =>
 				el.classList.remove('is-selected'));
-			item.style.backgroundColor = 'var(--interactive-accent)';
-			item.style.color = 'var(--text-on-accent)';
 		});
 
-		item.addEventListener('mouseleave', () => {
-			item.style.backgroundColor = '';
-			item.style.color = '';
-		});
+		item.addEventListener('mouseleave', () => {});
 
 		// Select on click
 		item.addEventListener('click', () => {
@@ -145,13 +129,12 @@ export class FolderSuggestions {
 	private createSearchInput(container: HTMLElement, folders: string[], onSelect: (path: string) => void): HTMLInputElement {
 		// Create search input
 		const searchContainer = document.createElement('div');
-		searchContainer.style.padding = '8px';
+		searchContainer.classList.add('folder-suggestion-search-container');
 
 		const searchInput = document.createElement('input');
 		searchInput.type = 'text';
 		searchInput.placeholder = 'Search folders...';
-		searchInput.style.width = '100%';
-		searchInput.style.padding = '4px';
+		searchInput.addClass('folder-suggestion-search-input');
 
 		searchContainer.appendChild(searchInput);
 		container.appendChild(searchContainer);
@@ -205,16 +188,14 @@ export class FolderSuggestions {
 		items.forEach(item => {
 			const htmlItem = item as HTMLElement;
 			htmlItem.classList.remove('is-selected');
-			htmlItem.style.backgroundColor = '';
-			htmlItem.style.color = '';
+			htmlItem.addClass('folder-suggestion-update-selection-html-item')
 		});
 
 		// Apply selection styling
 		if (index >= 0 && items[index]) {
 			const selectedItem = items[index] as HTMLElement;
 			selectedItem.classList.add('is-selected');
-			selectedItem.style.backgroundColor = 'var(--interactive-accent)';
-			selectedItem.style.color = 'var(--text-on-accent)';
+			selectedItem.addClass('folder-suggestion-update-selection-selected-item');
 			selectedItem.scrollIntoView({block: 'nearest'});
 		}
 	}
