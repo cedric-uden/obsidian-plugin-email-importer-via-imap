@@ -200,7 +200,7 @@ class EmailImporterSettingsTab extends PluginSettingTab {
 
 					try {
 						// Clear the dropdown first
-						this.mailboxDropdown.innerHTML = '';
+						this.mailboxDropdown.empty();
 
 						// Add a placeholder option while loading
 						const loadingOption = document.createElement('option');
@@ -213,7 +213,7 @@ class EmailImporterSettingsTab extends PluginSettingTab {
 						const mailboxes = await this.plugin.client.getMailboxNames();
 
 						// Clear the dropdown again
-						this.mailboxDropdown.innerHTML = '';
+						this.mailboxDropdown.empty();
 
 						// Add all the mailboxes
 						mailboxes.forEach(mailbox => {
@@ -236,7 +236,7 @@ class EmailImporterSettingsTab extends PluginSettingTab {
 						console.error('Error fetching mailboxes:', error);
 
 						// Reset dropdown to just show the current value in case of error
-						this.mailboxDropdown.innerHTML = '';
+						this.mailboxDropdown.empty();
 						const option = document.createElement('option');
 						option.value = currentValue;
 						option.text = currentValue;

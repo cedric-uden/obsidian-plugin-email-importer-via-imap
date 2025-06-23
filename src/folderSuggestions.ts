@@ -98,7 +98,11 @@ export class FolderSuggestions {
 				const match = path.substring(index, index + query.length);
 				const after = path.substring(index + query.length);
 
-				item.innerHTML = before + '<strong>' + match + '</strong>' + after;
+				item.appendChild(document.createTextNode(before));
+				const strong = document.createElement('strong');
+				strong.textContent = match;
+				item.appendChild(strong);
+				item.appendChild(document.createTextNode(after));
 			} else {
 				item.textContent = path;
 			}
