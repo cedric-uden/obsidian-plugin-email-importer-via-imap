@@ -44,7 +44,7 @@ export class FolderSuggestions {
 		const container = document.createElement('div');
 		container.addClass('folder-suggestion-container');
 
-		Object.assign(container.style, {
+		container.setCssStyles({
 			width: rect.width + 'px',
 			top: (rect.bottom + 5) + 'px',
 			left: rect.left + 'px'
