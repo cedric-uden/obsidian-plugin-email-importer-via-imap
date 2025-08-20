@@ -207,10 +207,11 @@ class ImapClient {
 				}) as ImapFetch;
 
 				f.on('message', (msg: ImapMessage) => {
-					const messagePromise = this.getMessages(msg).then(emailInfo => {
+					const messagePromise = (async () => {
+						const emailInfo = await this.getMessages(msg);
 						emails.push(emailInfo);
 						return emailInfo;
-					});
+					})();
 					messagePromises.push(messagePromise);
 				});
 
@@ -219,24 +220,23 @@ class ImapClient {
 					reject(err);
 				});
 
-				f.once('end', () => {
-					Promise.all(messagePromises)
-						.then(() => {
-							const filterManager = new EmailFilterManager();
-							if (onlyUnread) {
-								filterManager.addFilter(new UnreadFilterStrategy());
-							}
-							if (this.config.matchPrefix.trim() !== '') {
-								filterManager.addFilter(new PrefixFilterStrategy(this.config.matchPrefix));
-							}
-							const filteredEmails = filterManager.filterEmails(emails);
-							resolve(filteredEmails);
-						})
-						.catch(err => {
-							reject(err);
-						});
+				f.once('end', async () => {
+					try {
+						await Promise.all(messagePromises);
+						const filterManager = new EmailFilterManager();
+						if (onlyUnread) {
+							filterManager.addFilter(new UnreadFilterStrategy());
+						}
+						if (this.config.matchPrefix.trim() !== '') {
+							filterManager.addFilter(new PrefixFilterStrategy(this.config.matchPrefix));
+						}
+						const filteredEmails = filterManager.filterEmails(emails);
+						resolve(filteredEmails);
+					} catch (err) {
+						reject(err);
+					}
 				});
-			}).then();
+			});
 			this.imap.once('error', (err: Error) => reject(err));
 		});
 	}
