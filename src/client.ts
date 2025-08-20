@@ -29,7 +29,12 @@ interface ImapFetch {
 }
 
 interface Mailboxes {
-	[key: string]: unknown;
+	[key: string]: {
+		attribs: string[];
+		delimiter: string;
+		children?: Mailboxes;
+		parent?: Mailboxes;
+	};
 }
 
 class ImapClient {
@@ -105,8 +110,8 @@ class ImapClient {
 	}
 
 	private onError() {
-		this.imap.once('error', function (err: Error) {
-			console.error(err);
+		this.imap.once('error', (err: Error) => {
+			console.error('IMAP connection error:', err);
 		});
 	}
 
@@ -151,14 +156,9 @@ class ImapClient {
 	}
 
 	async markAsRead(uid: number | number[]): Promise<void> {
-		return new Promise((resolve, reject) => {
-			this.openInbox((err) => {
-				if (err) {
-					console.error('Error opening mailbox:', err);
-					reject(err);
-					return;
-				}
-
+		try {
+			const box = await this.openInbox();
+			return new Promise((resolve, reject) => {
 				this.imap.setFlags(uid, ['\\Seen'], (flagErr: Error | null) => {
 					if (flagErr) {
 						console.error('Error marking message as read:', flagErr);
@@ -168,7 +168,10 @@ class ImapClient {
 					}
 				});
 			});
-		});
+		} catch (err) {
+			console.error('Error opening mailbox:', err);
+			throw err;
+		}
 	}
 
 	async getAvailableMailboxes(): Promise<string[]> {
