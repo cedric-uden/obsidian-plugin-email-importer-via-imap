@@ -203,7 +203,7 @@ class EmailImporterSettingsTab extends PluginSettingTab {
 						this.mailboxDropdown.empty();
 
 						// Add a placeholder option while loading
-						const loadingOption = document.createElement('option');
+						const loadingOption = document.createEl('option');
 						loadingOption.text = 'Loading mailboxes...';
 						loadingOption.disabled = true;
 						this.mailboxDropdown.appendChild(loadingOption);
@@ -217,7 +217,7 @@ class EmailImporterSettingsTab extends PluginSettingTab {
 
 						// Add all the mailboxes
 						mailboxes.forEach(mailbox => {
-							const option = document.createElement('option');
+							const option = document.createEl('option');
 							option.value = mailbox;
 							option.text = mailbox;
 							this.mailboxDropdown.appendChild(option);
@@ -237,7 +237,7 @@ class EmailImporterSettingsTab extends PluginSettingTab {
 
 						// Reset dropdown to just show the current value in case of error
 						this.mailboxDropdown.empty();
-						const option = document.createElement('option');
+						const option = document.createEl('option');
 						option.value = currentValue;
 						option.text = currentValue;
 						this.mailboxDropdown.appendChild(option);
