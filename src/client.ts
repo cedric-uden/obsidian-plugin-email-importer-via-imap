@@ -120,8 +120,16 @@ class ImapClient {
 		});
 	}
 
-	private async openInbox(cb: (err: Error | null, box?: Box) => void) {
-		this.imap.openBox(this.config.mailbox, false, cb);
+	private openInbox(): Promise<Box> {
+		return new Promise((resolve, reject) => {
+			this.imap.openBox(this.config.mailbox, false, (err: Error | null, box?: Box) => {
+				if (err) {
+					reject(err);
+				} else {
+					resolve(box!);
+				}
+			});
+		});
 	}
 
 	connect(): Promise<void> {
@@ -157,7 +165,7 @@ class ImapClient {
 
 	async markAsRead(uid: number | number[]): Promise<void> {
 		try {
-			const box = await this.openInbox();
+			await this.openInbox();
 			return new Promise((resolve, reject) => {
 				this.imap.setFlags(uid, ['\\Seen'], (flagErr: Error | null) => {
 					if (flagErr) {
@@ -187,21 +195,17 @@ class ImapClient {
 		});
 	}
 
-	fetch(nRecentMails = 5, onlyUnread = false): Promise<EmailInfo[]> {
-
+	async fetch(nRecentMails = 5, onlyUnread = false): Promise<EmailInfo[]> {
 		const messagePromises: Promise<EmailInfo>[] = [];
-		return new Promise((resolve, reject) => {
-			this.openInbox((err: Error | null, box: Box) => {
-				if (err) {
-					reject(err);
-					return;
-				}
 
-				if (box.messages.total === 0) {
-					resolve([]);
-					return;
-				}
+		try {
+			const box = await this.openInbox();
 
+			if (box.messages.total === 0) {
+				return [];
+			}
+
+			return new Promise((resolve, reject) => {
 				const range = this.calculateFetchRange(box.messages.total, nRecentMails);
 				const emails: EmailInfo[] = [];
 				const f = this.imap.seq.fetch(range, {
@@ -240,8 +244,10 @@ class ImapClient {
 					}
 				});
 			});
-			this.imap.once('error', (err: Error) => reject(err));
-		});
+		} catch (err) {
+			console.error('Error opening mailbox:', err);
+			throw err;
+		}
 	}
 }
 
