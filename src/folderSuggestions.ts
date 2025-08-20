@@ -55,7 +55,7 @@ export class FolderSuggestions {
 		parent.appendChild(container);
 
 		// Add event listener to close the popup when clicking outside
-		setTimeout(() => {
+		window.setTimeout(() => {
 			document.addEventListener('click', (e) => {
 				if (!container.contains(e.target as Node) && e.target !== inputEl) {
 					container.remove();
