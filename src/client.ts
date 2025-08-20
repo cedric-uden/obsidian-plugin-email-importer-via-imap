@@ -5,7 +5,9 @@ import {EmailFilterManager, PrefixFilterStrategy, UnreadFilterStrategy} from "./
 // Define interfaces for IMAP types
 interface ImapMessage {
 	on(event: 'body', listener: (stream: NodeJS.ReadableStream, info: BodyInfo) => void): this;
+
 	once(event: 'attributes', listener: (attrs: MessageAttributes) => void): this;
+
 	once(event: 'end', listener: () => void): this;
 }
 
@@ -20,7 +22,9 @@ interface MessageAttributes {
 
 interface ImapFetch {
 	on(event: 'message', listener: (msg: ImapMessage) => void): this;
+
 	once(event: 'error', listener: (err: Error) => void): this;
+
 	once(event: 'end', listener: () => void): this;
 }
 
