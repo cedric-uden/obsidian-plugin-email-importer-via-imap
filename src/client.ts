@@ -2,6 +2,32 @@ import Connection, {Box} from "./imap/lib/Connection";
 import {EmailInfo, ImapConfig} from "./models";
 import {EmailFilterManager, PrefixFilterStrategy, UnreadFilterStrategy} from "./filterStategy";
 
+// Define interfaces for IMAP types
+interface ImapMessage {
+	on(event: 'body', listener: (stream: NodeJS.ReadableStream, info: BodyInfo) => void): this;
+	once(event: 'attributes', listener: (attrs: MessageAttributes) => void): this;
+	once(event: 'end', listener: () => void): this;
+}
+
+interface BodyInfo {
+	which: string;
+}
+
+interface MessageAttributes {
+	flags: string[];
+	uid: number;
+}
+
+interface ImapFetch {
+	on(event: 'message', listener: (msg: ImapMessage) => void): this;
+	once(event: 'error', listener: (err: Error) => void): this;
+	once(event: 'end', listener: () => void): this;
+}
+
+interface Mailboxes {
+	[key: string]: unknown;
+}
+
 class ImapClient {
 	private imap: Connection;
 	private readonly config: ImapConfig;
@@ -18,12 +44,12 @@ class ImapClient {
 		return `${start}:${totalMessages}`;
 	}
 
-	private getMessages(msg: any): Promise<EmailInfo> {
+	private getMessages(msg: ImapMessage): Promise<EmailInfo> {
 		return new Promise((resolve) => {
 			const emailInfo = new EmailInfo(new Date());
 
-			msg.on('body', (stream: any, info: any) => this.processMessageBody(stream, info, emailInfo));
-			msg.once('attributes', (attrs: any) => this.processMessageAttributes(attrs, emailInfo));
+			msg.on('body', (stream: NodeJS.ReadableStream, info: BodyInfo) => this.processMessageBody(stream, info, emailInfo));
+			msg.once('attributes', (attrs: MessageAttributes) => this.processMessageAttributes(attrs, emailInfo));
 			msg.once('end', () => resolve(emailInfo));
 		});
 	}
@@ -37,9 +63,9 @@ class ImapClient {
 			.replace(/=\n/g, '');  // Remove soft line breaks (Unix style)
 	}
 
-	private processMessageBody(stream: any, info: any, emailInfo: EmailInfo) {
+	private processMessageBody(stream: NodeJS.ReadableStream, info: BodyInfo, emailInfo: EmailInfo) {
 		let buffer = Buffer.alloc(0);
-		stream.on('data', (chunk: any) => {
+		stream.on('data', (chunk: Buffer) => {
 			buffer = Buffer.concat([buffer, chunk]);
 		});
 		stream.once('end', () => {
@@ -69,13 +95,13 @@ class ImapClient {
 		});
 	}
 
-	private processMessageAttributes(attrs: any, emailInfo: EmailInfo) {
+	private processMessageAttributes(attrs: MessageAttributes, emailInfo: EmailInfo) {
 		emailInfo.isUnread = !attrs['flags'].includes('\\Seen');
 		emailInfo.uid = attrs['uid'];
 	}
 
 	private onError() {
-		this.imap.once('error', function (err: any) {
+		this.imap.once('error', function (err: Error) {
 			console.error(err);
 		});
 	}
@@ -96,7 +122,7 @@ class ImapClient {
 				resolve();
 			};
 
-			const errorHandler = (err: any) => {
+			const errorHandler = (err: Error) => {
 				this.imap.removeListener('ready', readyHandler);
 				console.error('Connection attempt failed:', err);
 				reject(err);
@@ -129,7 +155,7 @@ class ImapClient {
 					return;
 				}
 
-				this.imap.setFlags(uid, ['\\Seen'], (flagErr: any) => {
+				this.imap.setFlags(uid, ['\\Seen'], (flagErr: Error | null) => {
 					if (flagErr) {
 						console.error('Error marking message as read:', flagErr);
 						reject(flagErr);
@@ -143,7 +169,7 @@ class ImapClient {
 
 	async getAvailableMailboxes(): Promise<string[]> {
 		return new Promise((resolve, reject) => {
-			this.imap.getBoxes((err: any, boxes: any) => {
+			this.imap.getBoxes((err: Error | null, boxes: Mailboxes) => {
 				if (err) {
 					console.error('Error getting mailboxes:', err);
 					reject(err);
@@ -158,7 +184,7 @@ class ImapClient {
 
 		const messagePromises: Promise<EmailInfo>[] = [];
 		return new Promise((resolve, reject) => {
-			this.openInbox((err: any, box: any) => {
+			this.openInbox((err: Error | null, box: Box) => {
 				if (err) {
 					reject(err);
 					return;
@@ -174,9 +200,9 @@ class ImapClient {
 				const f = this.imap.seq.fetch(range, {
 					bodies: ['HEADER.FIELDS (FROM TO SUBJECT DATE)', 'TEXT'],
 					struct: true
-				});
+				}) as ImapFetch;
 
-				f.on('message', (msg: any) => {
+				f.on('message', (msg: ImapMessage) => {
 					const messagePromise = this.getMessages(msg).then(emailInfo => {
 						emails.push(emailInfo);
 						return emailInfo;
@@ -184,7 +210,7 @@ class ImapClient {
 					messagePromises.push(messagePromise);
 				});
 
-				f.once('error', (err: string) => {
+				f.once('error', (err: Error) => {
 					console.error('Fetch error: ' + err);
 					reject(err);
 				});
@@ -207,7 +233,7 @@ class ImapClient {
 						});
 				});
 			}).then();
-			this.imap.once('error', (err: any) => reject(err));
+			this.imap.once('error', (err: Error) => reject(err));
 		});
 	}
 }

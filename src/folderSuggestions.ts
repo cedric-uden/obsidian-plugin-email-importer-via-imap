@@ -1,4 +1,4 @@
-import {App} from "obsidian";
+import {App, TAbstractFile} from "obsidian";
 import EmailImporterPlugin from "./main";
 
 export class FolderSuggestions {
@@ -28,7 +28,7 @@ export class FolderSuggestions {
 
 	private getFolders(): string[] {
 		const folders: string[] = [];
-		this.app.vault.getAllLoadedFiles().forEach((file: any) => {
+		this.app.vault.getAllLoadedFiles().forEach((file: TAbstractFile) => {
 			if (file.children) {
 				folders.push(file.path);
 			}
