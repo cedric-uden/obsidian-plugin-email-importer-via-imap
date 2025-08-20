@@ -41,7 +41,7 @@ export class FolderSuggestions {
 		document.querySelectorAll('.folder-suggestion-container').forEach(el => el.remove());
 
 		const rect = inputEl.getBoundingClientRect();
-		const container = document.createDiv('div');
+		const container = createDiv();
 		container.addClass('folder-suggestion-container');
 
 		container.setCssStyles({
@@ -74,7 +74,7 @@ export class FolderSuggestions {
 			.forEach(folder => this.addSuggestionItem(folder, resultsList, onSelect, query));
 
 		if (resultsList.childElementCount === 0) {
-			const noResults = document.createDiv();
+			const noResults = createDiv();
 			noResults.textContent = 'No matching folders found';
 			noResults.classList.add('folder-suggestion-no-results-message');
 			resultsList.appendChild(noResults);
@@ -82,7 +82,7 @@ export class FolderSuggestions {
 	}
 
 	private addSuggestionItem(path: string, resultsList: HTMLElement, onSelect: (path: string) => void, query: string) {
-		const item = document.createDiv();
+		const item = createDiv();
 		item.addClass('suggestion-item');
 		item.setAttribute('data-path', path);
 		item.addClass('folder-suggestion-suggestion-item');
@@ -99,7 +99,7 @@ export class FolderSuggestions {
 				const after = path.substring(index + query.length);
 
 				item.appendText(before);
-				const strong = document.createEl('strong');
+				const strong = createEl('strong');
 				strong.textContent = match;
 				item.appendChild(strong);
 				item.appendText(after);
@@ -129,10 +129,10 @@ export class FolderSuggestions {
 
 	private createSearchInput(container: HTMLElement, folders: string[], onSelect: (path: string) => void): HTMLInputElement {
 		// Create search input
-		const searchContainer = document.createDiv();
+		const searchContainer = createDiv();
 		searchContainer.classList.add('folder-suggestion-search-container');
 
-		const searchInput = document.createEl('input');
+		const searchInput = createEl('input');
 		searchInput.type = 'text';
 		searchInput.placeholder = 'Search folders...';
 		searchInput.addClass('folder-suggestion-search-input');
@@ -140,7 +140,7 @@ export class FolderSuggestions {
 		searchContainer.appendChild(searchInput);
 		container.appendChild(searchContainer);
 
-		const resultsList = document.createDiv();
+		const resultsList = createDiv();
 		resultsList.addClass('suggestion-list');
 		container.appendChild(resultsList);
 
