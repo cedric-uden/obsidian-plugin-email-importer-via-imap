@@ -173,7 +173,7 @@ class ImapClient {
 
 	async getAvailableMailboxes(): Promise<string[]> {
 		return new Promise((resolve, reject) => {
-			this.imap.getBoxes((err: Error | null, boxes: Mailboxes) => {
+			this.imap.getBoxes((err: Error | null, boxes?: Mailboxes) => {
 				if (err) {
 					console.error('Error getting mailboxes:', err);
 					reject(err);
