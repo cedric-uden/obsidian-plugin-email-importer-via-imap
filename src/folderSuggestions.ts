@@ -98,11 +98,11 @@ export class FolderSuggestions {
 				const match = path.substring(index, index + query.length);
 				const after = path.substring(index + query.length);
 
-				item.appendChild(document.createTextNode(before));
+				item.appendText(before);
 				const strong = document.createElement('strong');
 				strong.textContent = match;
 				item.appendChild(strong);
-				item.appendChild(document.createTextNode(after));
+				item.appendText(after);
 			} else {
 				item.textContent = path;
 			}
