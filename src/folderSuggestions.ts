@@ -116,7 +116,8 @@ export class FolderSuggestions {
 				el.classList.remove('is-selected'));
 		});
 
-		item.addEventListener('mouseleave', () => {});
+		item.addEventListener('mouseleave', () => {
+		});
 
 		// Select on click
 		item.addEventListener('click', () => {
