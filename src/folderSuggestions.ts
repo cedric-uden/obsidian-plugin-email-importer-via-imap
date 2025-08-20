@@ -1,4 +1,4 @@
-import {App} from "obsidian";
+import {App, TAbstractFile, TFolder} from "obsidian";
 import EmailImporterPlugin from "./main";
 
 export class FolderSuggestions {
@@ -28,8 +28,8 @@ export class FolderSuggestions {
 
 	private getFolders(): string[] {
 		const folders: string[] = [];
-		this.app.vault.getAllLoadedFiles().forEach((file: any) => {
-			if (file.children) {
+		this.app.vault.getAllLoadedFiles().forEach((file: TAbstractFile) => {
+			if (file instanceof TFolder) {
 				folders.push(file.path);
 			}
 		});
@@ -41,10 +41,10 @@ export class FolderSuggestions {
 		document.querySelectorAll('.folder-suggestion-container').forEach(el => el.remove());
 
 		const rect = inputEl.getBoundingClientRect();
-		const container = document.createElement('div');
+		const container = createDiv();
 		container.addClass('folder-suggestion-container');
 
-		Object.assign(container.style, {
+		container.setCssStyles({
 			width: rect.width + 'px',
 			top: (rect.bottom + 5) + 'px',
 			left: rect.left + 'px'
@@ -55,7 +55,7 @@ export class FolderSuggestions {
 		parent.appendChild(container);
 
 		// Add event listener to close the popup when clicking outside
-		setTimeout(() => {
+		window.setTimeout(() => {
 			document.addEventListener('click', (e) => {
 				if (!container.contains(e.target as Node) && e.target !== inputEl) {
 					container.remove();
@@ -74,7 +74,7 @@ export class FolderSuggestions {
 			.forEach(folder => this.addSuggestionItem(folder, resultsList, onSelect, query));
 
 		if (resultsList.childElementCount === 0) {
-			const noResults = document.createElement('div');
+			const noResults = createDiv();
 			noResults.textContent = 'No matching folders found';
 			noResults.classList.add('folder-suggestion-no-results-message');
 			resultsList.appendChild(noResults);
@@ -82,7 +82,7 @@ export class FolderSuggestions {
 	}
 
 	private addSuggestionItem(path: string, resultsList: HTMLElement, onSelect: (path: string) => void, query: string) {
-		const item = document.createElement('div');
+		const item = createDiv();
 		item.addClass('suggestion-item');
 		item.setAttribute('data-path', path);
 		item.addClass('folder-suggestion-suggestion-item');
@@ -98,11 +98,11 @@ export class FolderSuggestions {
 				const match = path.substring(index, index + query.length);
 				const after = path.substring(index + query.length);
 
-				item.appendChild(document.createTextNode(before));
-				const strong = document.createElement('strong');
+				item.appendText(before);
+				const strong = createEl('strong');
 				strong.textContent = match;
 				item.appendChild(strong);
-				item.appendChild(document.createTextNode(after));
+				item.appendText(after);
 			} else {
 				item.textContent = path;
 			}
@@ -116,7 +116,8 @@ export class FolderSuggestions {
 				el.classList.remove('is-selected'));
 		});
 
-		item.addEventListener('mouseleave', () => {});
+		item.addEventListener('mouseleave', () => {
+		});
 
 		// Select on click
 		item.addEventListener('click', () => {
@@ -128,10 +129,10 @@ export class FolderSuggestions {
 
 	private createSearchInput(container: HTMLElement, folders: string[], onSelect: (path: string) => void): HTMLInputElement {
 		// Create search input
-		const searchContainer = document.createElement('div');
+		const searchContainer = createDiv();
 		searchContainer.classList.add('folder-suggestion-search-container');
 
-		const searchInput = document.createElement('input');
+		const searchInput = createEl('input');
 		searchInput.type = 'text';
 		searchInput.placeholder = 'Search folders...';
 		searchInput.addClass('folder-suggestion-search-input');
@@ -139,7 +140,7 @@ export class FolderSuggestions {
 		searchContainer.appendChild(searchInput);
 		container.appendChild(searchContainer);
 
-		const resultsList = document.createElement('div');
+		const resultsList = createDiv();
 		resultsList.addClass('suggestion-list');
 		container.appendChild(resultsList);
 
